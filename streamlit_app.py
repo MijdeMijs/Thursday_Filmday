@@ -17,6 +17,10 @@ except FileNotFoundError:
 except Exception as e:
     pass
 
+# Initialize
+if "rerun" not in st.session_state:
+    st.session_state.rerun = True
+
 # Home page
 st.title("Thursday Filmday :clapper::film_projector:")
 st.write(
@@ -42,12 +46,23 @@ st.header("Film Chooser", divider="rainbow")
 min_year = IMDb_df['startYear'].min()
 max_year = datetime.now().year
 
-selected_years = st.slider("Select a range of values", 
+selected_years = st.slider("Select a range of years:", 
                    min_year, max_year,
-                   (1980, max_year),
+                   (min_year, max_year),
                    step=1)
 
 st.write("Values:", selected_years)
+
+    # Time
+min_time = 30
+max_time = 300
+
+selected_time = st.slider("Select a film length in minutes:", 
+                   min_time, max_time,
+                   (min_time, max_time),
+                   step=1)
+
+st.write("Values:", selected_time)
 
     # Genres
 genres = sorted(IMDb_df.columns[7:33 + 1].tolist())
@@ -68,6 +83,22 @@ else:
         
     if s:
         st.markdown(s)
+
+    # Ratings
+min_rating = 1
+max_rating = 10 
+
+selected_rating = st.slider("Select a range of film IMDb ratings:", 
+               min_rating, max_rating,
+               (1, 10))
+
+    # Votes
+min_votes = IMDb_df['numVotes'].min()
+max_votes = IMDb_df['numVotes'].max()
+
+selected_votes = st.slider("Select a range of how many have voted for the film rating:", 
+               min_votes, max_votes,
+               (min_votes, max_votes))
 
 # Movie Stats
 st.header("Movie Stats", divider="rainbow")
