@@ -29,9 +29,26 @@ st.write(
 
 # Film Chooser
 st.header("Film Chooser", divider="rainbow")
+st.write('Welcome to the Film Chooser! This is a tool that might help you select choose a movie for the movie night. It is very simple to use. You just provide your preferences in the filter options below (see Search Filters). After you\'re done, quickly check your choices (Applied Filters). A table with options that are within your requirements will automatically update (see Possible Movies). Good luck chosing your movie!!!')
 
 # Process
 st.subheader('Search Filters', divider='grey')
+
+    # Genres
+genres = sorted(IMDb_df.columns[7:33 + 1].tolist())
+genres.insert(0, 'No preference')
+selected_genre = st.multiselect(
+    "Genre(s):",
+    (genres),
+)
+
+    # AND/OR operator
+if st.checkbox('AND/OR operator'):
+    operator = 1
+    st.write('Currently, the **OR** operator is selected to pass your genres. Notice that this could give :red[**more precise**], but :red[**fewer movie options**]!')
+else:
+    operator = 0
+    st.write('Currently, the **AND** operator is selected to pass your genres. Notice that this could give :red[**less precise**], but :red[**more movie options**]!')
 
     # Title
 #titles = sorted(IMDb_df['primaryTitle'].unique().tolist())
@@ -43,7 +60,7 @@ st.subheader('Search Filters', divider='grey')
     # Year
 min_year = IMDb_df['startYear'].min()
 max_year = datetime.now().year
-selected_years = st.slider("Select a range of years:", 
+selected_years = st.slider("Range of premiere years:", 
                    min_year, max_year,
                    (min_year, max_year),
                    step=1)
@@ -51,30 +68,22 @@ selected_years = st.slider("Select a range of years:",
     # Time
 min_time = 30
 max_time = 300
-selected_time = st.slider("Select a film length in minutes:", 
+selected_time = st.slider("Range of film duration in minutes:", 
                    min_time, max_time,
                    (min_time, max_time),
                    step=1)
 
-    # Genres
-genres = sorted(IMDb_df.columns[7:33 + 1].tolist())
-genres.insert(0, 'No preference')
-selected_genre = st.multiselect(
-    "Genre(s):",
-    (genres),
-)
-
     # Ratings
 min_rating = 1
 max_rating = 10 
-selected_rating = st.slider("Select a range of film IMDb ratings:", 
+selected_rating = st.slider("Range of film IMDb ratings:", 
                min_rating, max_rating,
                (1, 10))
 
     # Votes
 min_votes = round(IMDb_df['numVotes'].min(), -3)
 max_votes = round(IMDb_df['numVotes'].max()+1000, -3)
-selected_votes = st.slider("Select a range of how many have voted for the film rating:", 
+selected_votes = st.slider("Range of number of votes for the IMDb film rating:", 
                min_votes, max_votes,
                (min_votes, max_votes),
                step=1000)
@@ -88,7 +97,7 @@ selected_votes = st.slider("Select a range of how many have voted for the film r
 #)
 
 # UI and buttons
-st.subheader('Filter Values', divider='grey')
+st.subheader('Applied Filters', divider='grey')
 
 left_column, right_column = st.columns(2)
 
@@ -129,6 +138,9 @@ with right_column:
             
             if s:
                 st.markdown(s)
+
+# Possible Movies
+st.subheader('Possible Movies', divider='grey')
 
 # Movie Stats
 st.header("Movie Stats", divider="rainbow")
