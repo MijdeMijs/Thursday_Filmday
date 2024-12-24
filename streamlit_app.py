@@ -36,19 +36,19 @@ st.subheader('Search Filters', divider='grey')
 
     # Genres
 genres = sorted(IMDb_df.columns[7:33 + 1].tolist())
-genres.insert(0, 'No preference')
+genres.insert(0, 'No preference...')
 selected_genre = st.multiselect(
     "Genre(s):",
-    (genres),
+    (genres)
 )
 
     # AND/OR operator
 if st.checkbox('AND/OR operator'):
     operator = 1
-    st.write('Currently, the **OR** operator is selected to pass your genres. Notice that this could give :red[**more precise**], but :red[**fewer movie options**]!')
+    st.write('Currently, the **OR** operator is selected to pass your genres. Notice that this could give :red[**less precise**], but :red[**more movie options**]!')
 else:
     operator = 0
-    st.write('Currently, the **AND** operator is selected to pass your genres. Notice that this could give :red[**less precise**], but :red[**more movie options**]!')
+    st.write('Currently, the **AND** operator is selected to pass your genres. Notice that this could give :red[**more precise**], but :red[**fewer movie options**]!')
 
     # Title
 #titles = sorted(IMDb_df['primaryTitle'].unique().tolist())
@@ -67,11 +67,11 @@ selected_years = st.slider("Range of premiere years:",
 
     # Time
 min_time = 30
-max_time = 300
+max_time = 240
 selected_time = st.slider("Range of film duration in minutes:", 
                    min_time, max_time,
                    (min_time, max_time),
-                   step=1)
+                   step=5)
 
     # Ratings
 min_rating = 1
@@ -81,11 +81,10 @@ selected_rating = st.slider("Range of film IMDb ratings:",
                (1, 10))
 
     # Votes
-min_votes = round(IMDb_df['numVotes'].min(), -3)
-max_votes = round(IMDb_df['numVotes'].max()+1000, -3)
-selected_votes = st.slider("Range of number of votes for the IMDb film rating:", 
+min_votes = 0
+max_votes = 100000
+selected_votes = st.slider("Minimum number of votes for the IMDb film rating (the blockbusters have at least 100000 votes):", 
                min_votes, max_votes,
-               (min_votes, max_votes),
                step=1000)
 
     # Director
@@ -117,7 +116,7 @@ with left_column:
         st.write(f"IMDb rating range: **{selected_rating[0]}** and **{selected_rating[1]}**")
 
             # Votes
-        st.write(f"IMDb voting range: **{selected_votes[0]}** and **{selected_votes[1]}**")
+        st.write(f"Minimum number of IMDb votes: **{selected_votes}**")
 
             # Director
         #st.write(print(selected_director))
@@ -141,6 +140,41 @@ with right_column:
 
 # Possible Movies
 st.subheader('Possible Movies', divider='grey')
+
+filtered_df = IMDb_df[IMDb_df['startYear'].between(selected_years[0], selected_years[1])]
+filtered_df = filtered_df[filtered_df['runtimeMinutes'].between(selected_time[0], selected_time[1])]
+filtered_df = filtered_df[filtered_df['averageRating'].between(selected_rating[0], selected_rating[1])]
+filtered_df = filtered_df[filtered_df['numVotes'] >= selected_votes]
+
+if not selected_genre or 'No preference...' in selected_genre:
+    filtered_df = filtered_df
+else:
+    if operator == 0:
+        # AND condition: All selected genres must be 1
+        filtered_df = filtered_df[(filtered_df[selected_genre] == 1).all(axis=1)]
+    elif operator == 1:
+        # OR condition: At least one of the selected genres must be 1
+        filtered_df = filtered_df[(filtered_df[selected_genre].sum(axis=1) > 0)]
+
+st.write(filtered_df)
+
+filtered_data = {'Film': filtered_df['primaryTitle'],
+        'Year': filtered_df['startYear'],
+        'Duration': filtered_df['runtimeMinutes'],
+        'IMDb Rating': filtered_df['averageRating'],
+        'Number of votes': filtered_df['numVotes'],
+        '1st director': filtered_df['nmDirector_1'],
+        '2nd director': filtered_df['nmDirector_2']}
+new_df = pd.DataFrame(filtered_data)
+
+st.write(new_df.reset_index(drop=True))
+
+if 'No preference...' in selected_genre:
+    warning = f':red[**Warning!** Genre is not filtered because \'No preference...\' is selected!]'
+else:
+    warning = ''
+
+st.write(warning)
 
 # Movie Stats
 st.header("Movie Stats", divider="rainbow")
