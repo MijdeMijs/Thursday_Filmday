@@ -82,10 +82,10 @@ selected_rating = st.slider("Range of film IMDb ratings:",
 
     # Votes
 min_votes = 0
-max_votes = 100000
-selected_votes = st.slider("Minimum number of votes for the IMDb film rating (the blockbusters have at least 100000 votes):", 
+max_votes = 500000
+selected_votes = st.slider("Minimum number of votes for the IMDb film rating (the blockbusters have at least 200,000 votes):", 
                min_votes, max_votes,
-               step=1000)
+               step=5000)
 
     # Director
 #director = IMDb_df['nmDirector_1', 'nmDirector_2'].unique().tolist()
@@ -141,40 +141,35 @@ with right_column:
 # Possible Movies
 st.subheader('Possible Movies', divider='grey')
 
-    # Filter based on filter settings
-filtered_df = IMDb_df[IMDb_df['startYear'].between(selected_years[0], selected_years[1])]
-filtered_df = filtered_df[filtered_df['runtimeMinutes'].between(selected_time[0], selected_time[1])]
-filtered_df = filtered_df[filtered_df['averageRating'].between(selected_rating[0], selected_rating[1])]
-filtered_df = filtered_df[filtered_df['numVotes'] >= selected_votes]
+filters = (
+    IMDb_df['startYear'].between(selected_years[0], selected_years[1]) &
+    IMDb_df['runtimeMinutes'].between(selected_time[0], selected_time[1]) &
+    IMDb_df['averageRating'].between(selected_rating[0], selected_rating[1]) &
+    (IMDb_df['numVotes'] >= selected_votes)
+)
 
-if not selected_genre or 'No preference...' in selected_genre:
-    filtered_df = filtered_df
-else:
-    if operator == 0:
-        # AND condition: All selected genres must be 1
-        filtered_df = filtered_df[(filtered_df[selected_genre] == 1).all(axis=1)]
-    elif operator == 1:
-        # OR condition: At least one of the selected genres must be 1
-        filtered_df = filtered_df[(filtered_df[selected_genre].sum(axis=1) > 0)]
+# Apply genre-based filtering if necessary
+if selected_genre and 'No preference...' not in selected_genre:
+    if operator == 0:  # AND condition
+        genre_filter = (IMDb_df[selected_genre] == 1).all(axis=1)
+    elif operator == 1:  # OR condition
+        genre_filter = (IMDb_df[selected_genre].sum(axis=1) > 0)
+    filters &= genre_filter
 
-dummies = sorted(IMDb_df.columns[7:33 + 1].tolist())
+# Apply the combined filter to the DataFrame
+filtered_df = IMDb_df[filters]
 
-# Function to concatenate column names where the value is 1
-def concatenate_genres(row):
-    return ', '.join([col for col in dummies if row[col] == 1])
-
-# Apply the function to each row and create a new column
-#filtered_df['film_genres'] = filtered_df.apply(concatenate_genres, axis=1)
+st.write(filtered_df)
 
     # Make new df with possible film options
 filtered_data = {'Film': filtered_df['primaryTitle'],
-        'Year': filtered_df['startYear'],
-        'Duration': filtered_df['runtimeMinutes'],
-        #'Genres': filtered_df['film_genres'],
-        'IMDb Rating': filtered_df['averageRating'],
-        'Number of votes': filtered_df['numVotes'],
-        '1st director': filtered_df['nmDirector_1'],
-        '2nd director': filtered_df['nmDirector_2']}
+                 'Year': filtered_df['startYear'],
+                 'Duration': filtered_df['runtimeMinutes'],
+                 #'Genres': filtered_df['genres'],
+                 'IMDb Rating': filtered_df['averageRating'],
+                 'Number of votes': filtered_df['numVotes'],
+                 '1st director': filtered_df['nmDirector_1'],
+                 '2nd director': filtered_df['nmDirector_2']}
 new_df = pd.DataFrame(filtered_data)
 
 st.write(new_df.reset_index(drop=True))
