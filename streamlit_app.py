@@ -164,13 +164,13 @@ def concatenate_genres(row):
     return ', '.join([col for col in dummies if row[col] == 1])
 
 # Apply the function to each row and create a new column
-filtered_df['film_genres'] = filtered_df.apply(concatenate_genres, axis=1)
+#filtered_df['film_genres'] = filtered_df.apply(concatenate_genres, axis=1)
 
     # Make new df with possible film options
 filtered_data = {'Film': filtered_df['primaryTitle'],
         'Year': filtered_df['startYear'],
         'Duration': filtered_df['runtimeMinutes'],
-        'Genres': filtered_df['film_genres'],
+        #'Genres': filtered_df['film_genres'],
         'IMDb Rating': filtered_df['averageRating'],
         'Number of votes': filtered_df['numVotes'],
         '1st director': filtered_df['nmDirector_1'],
