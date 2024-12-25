@@ -141,6 +141,7 @@ with right_column:
 # Possible Movies
 st.subheader('Possible Movies', divider='grey')
 
+    # Filter based on filter settings
 filtered_df = IMDb_df[IMDb_df['startYear'].between(selected_years[0], selected_years[1])]
 filtered_df = filtered_df[filtered_df['runtimeMinutes'].between(selected_time[0], selected_time[1])]
 filtered_df = filtered_df[filtered_df['averageRating'].between(selected_rating[0], selected_rating[1])]
@@ -156,11 +157,20 @@ else:
         # OR condition: At least one of the selected genres must be 1
         filtered_df = filtered_df[(filtered_df[selected_genre].sum(axis=1) > 0)]
 
-st.write(filtered_df)
+dummies = sorted(IMDb_df.columns[7:33 + 1].tolist())
 
+# Function to concatenate column names where the value is 1
+def concatenate_genres(row):
+    return ', '.join([col for col in dummies if row[col] == 1])
+
+# Apply the function to each row and create a new column
+filtered_df['film_genres'] = filtered_df.apply(concatenate_genres, axis=1)
+
+    # Make new df with possible film options
 filtered_data = {'Film': filtered_df['primaryTitle'],
         'Year': filtered_df['startYear'],
         'Duration': filtered_df['runtimeMinutes'],
+        'Genres': filtered_df['film_genres'],
         'IMDb Rating': filtered_df['averageRating'],
         'Number of votes': filtered_df['numVotes'],
         '1st director': filtered_df['nmDirector_1'],
