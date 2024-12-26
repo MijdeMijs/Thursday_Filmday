@@ -138,7 +138,7 @@ with right_column:
             if s:
                 st.markdown(s)
 
-# Possible Movies
+# Possible Movies List
 st.subheader('Possible Movies', divider='grey')
 
 filters = (
@@ -159,20 +159,19 @@ if selected_genre and 'No preference...' not in selected_genre:
 # Apply the combined filter to the DataFrame
 filtered_df = IMDb_df[filters]
 
-st.write(filtered_df)
-
     # Make new df with possible film options
-filtered_data = {'Film': filtered_df['primaryTitle'],
+filtered_data = {'ID': filtered_df['tconst'],
+                 'Film': filtered_df['primaryTitle'],
                  'Year': filtered_df['startYear'],
                  'Duration': filtered_df['runtimeMinutes'],
-                 #'Genres': filtered_df['genres'],
+                 'Genres': filtered_df['genres'],
                  'IMDb Rating': filtered_df['averageRating'],
                  'Number of votes': filtered_df['numVotes'],
                  '1st director': filtered_df['nmDirector_1'],
                  '2nd director': filtered_df['nmDirector_2']}
 new_df = pd.DataFrame(filtered_data)
 
-st.write(new_df.reset_index(drop=True))
+st.write(new_df.iloc[:, 1:].reset_index(drop=True))
 
 if 'No preference...' in selected_genre:
     warning = f':red[**Warning!** Genre is not filtered because \'No preference...\' is selected!]'
@@ -180,6 +179,40 @@ else:
     warning = ''
 
 st.write(warning)
+
+st.subheader('Visit IMDb Page', divider='grey')
+
+left_column, right_column = st.columns(2)
+
+with left_column:
+    # Allow the user to select the sorting column
+    sort_column = st.selectbox("Select a column to sort by:", new_df.columns[[1, 2, 4, 5]])
+
+        # Ascending or descending
+    if st.checkbox('Ascending or descending'):
+        ascent = False
+        st.write(f'Currently, **{sort_column}** in descending order.')
+    else:
+        ascent = True
+        st.write(f'Currently, **{sort_column}** in ascending order.')
+
+    # Sort the DataFrame dynamically
+    sorted_new_df = new_df.sort_values(by=sort_column, ascending=ascent).iloc[:, :-2].reset_index(drop=True)
+
+    # Select the first 10 rows of the sorted DataFrame
+    top_10 = sorted_new_df.head(10)
+
+with right_column:
+    IMDb_link = st.selectbox("Select IMDb film page:", top_10['Film'].unique())
+    ID = top_10[top_10['Film'] == IMDb_link].iloc[0, 0]
+
+    # Define the URL you want to link to
+    url = f'https://www.imdb.com/title/{ID}/'
+
+    # Create the button
+    st.link_button("Visit the IMDb film page!", url)
+    
+st.write(top_10.iloc[:, 1:])
 
 # Movie Stats
 st.header("Movie Stats", divider="rainbow")
