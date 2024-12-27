@@ -4,6 +4,36 @@ import pandas as pd
 from datetime import datetime
 import gzip
 
+if "modal_shown" not in st.session_state:
+    st.session_state.modal_shown = False
+
+# Cookies!!!
+@st.dialog('Cookies!?')
+def show_modal():
+    st.write('We don\'t need :cookie: or :cupcake:!!! The big data companies just want your data to sell to obscure third parties that try to sell stuff you don\'t need! They feed the consumers and destroy the world! **NEVER ALLOW COOKIES!** We want MUFFINS!')
+    
+    gift = 'https://www.youtube.com/watch?v=kwgYSfqO0fg'
+    pop_up = ''
+
+    col1, col2, col3 = st.columns([5, 5, 10])
+
+    with col1:
+        if st.button("Bake a :cookie:"):
+            pop_up = "YOU FUCK! CAN'T YOU READ OR THINK!?"
+
+    with col2:
+        if st.button("Bake a :cupcake:"):
+            pop_up = 'YOU DISSAPONTED ME, YOU\'RE MUM AND THE WORLD!'
+
+    with col3:
+        st.link_button(':gift:', gift)
+
+    st.write(f'**:red[{pop_up}]**')
+
+if not st.session_state.modal_shown:
+    show_modal()
+    st.session_state.modal_shown = True
+      
 # Load data
 # Define file paths
 IMDb_path = 'IMDb_data.csv.gz'
