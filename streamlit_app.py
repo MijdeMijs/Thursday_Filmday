@@ -8,14 +8,14 @@ import gzip
 # Define file paths
 IMDb_path = 'IMDb_data.csv.gz'
 
-# Load the gzipped CSV file into a pandas DataFrame
-try:
+@st.cache_data
+def load_data():
+    # Load the gzipped CSV file into a pandas DataFrame
     with gzip.open(IMDb_path, 'rt', encoding='utf-8') as file:
-        IMDb_df = pd.read_csv(file)
-except FileNotFoundError:
-    pass
-except Exception as e:
-    pass
+        data = pd.read_csv(file)
+    return data
+
+IMDb_df = load_data()  # This is only executed once
 
 # Initialize
 if "rerun" not in st.session_state:
@@ -62,7 +62,7 @@ min_year = IMDb_df['startYear'].min()
 max_year = datetime.now().year
 selected_years = st.slider("Range of premiere years:", 
                    min_year, max_year,
-                   (min_year, max_year),
+                   (1970, max_year),
                    step=1)
 
     # Time
@@ -70,7 +70,7 @@ min_time = 30
 max_time = 240
 selected_time = st.slider("Range of film duration in minutes:", 
                    min_time, max_time,
-                   (min_time, max_time),
+                   (60, 120),
                    step=5)
 
     # Ratings
@@ -78,14 +78,14 @@ min_rating = 1
 max_rating = 10 
 selected_rating = st.slider("Range of film IMDb ratings:", 
                min_rating, max_rating,
-               (1, 10))
+               (6, 10))
 
     # Votes
 min_votes = 0
 max_votes = 500000
 selected_votes = st.slider("Minimum number of votes for the IMDb film rating (the blockbusters have at least 200,000 votes):", 
                min_votes, max_votes,
-               step=5000)
+               step=1000)
 
     # Director
 #director = IMDb_df['nmDirector_1', 'nmDirector_2'].unique().tolist()
