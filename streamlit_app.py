@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import gzip
+
 # endregion
 
 # ===============================
@@ -50,19 +51,16 @@ if not st.session_state.modal_shown:
 # region Load data
 # ===============================
 
-# Define file paths
-IMDb_path = 'IMDb_data.csv.gz'
-
 # Define load and cache IMDb data
 @st.cache_data
 def load_data():
     # Load the gzipped CSV file into a pandas DataFrame
-    with gzip.open(IMDb_path, 'rt', encoding='utf-8') as file:
+    with gzip.open('IMDb_data.csv.gz', 'rt', encoding='utf-8') as file:
         data = pd.read_csv(file)
     return data
 
 # Load IMDb data
-IMDb_df = load_data()  # This is only executed once
+IMDb_df = load_data()
 
 # endregion
 
@@ -327,11 +325,10 @@ filtered_data = {'ID': filtered_df['tconst'],
                  'Film': filtered_df['primaryTitle'],
                  'Year': filtered_df['startYear'],
                  'Duration': filtered_df['runtimeMinutes'],
-                 'Genres': filtered_df['genres'],
+                 'Main genre': filtered_df['main_genre'],
+                 'Additional genres': filtered_df['other_genres'],
                  'IMDb Rating': filtered_df['averageRating'],
-                 'Number of votes': filtered_df['numVotes'],
-                 '1st director': filtered_df['nmDirector_1'],
-                 '2nd director': filtered_df['nmDirector_2']}
+                 'Number of votes': filtered_df['numVotes']}
 new_df = pd.DataFrame(filtered_data)
 
 st.write(new_df.iloc[:, 1:].reset_index(drop=True))
