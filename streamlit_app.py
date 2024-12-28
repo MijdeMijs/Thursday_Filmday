@@ -109,6 +109,10 @@ st.subheader('Search Filters', divider='violet')
 # region Genre selection
 # ===============================
 
+st.write('**Genre:**')
+
+st.write('Select the genres that you would like to watch. First select a main genre and then select additional genres if you like. If you don\'t care about the genre of a movie, you can select the option **\'No preference for any genre...\'** (default) in the \'Main genre\' selection field. This option won\'t filter films by genre. If you do want to select a genre, but you don\'t care what the main genre of a movie is, choose **\'No preference for a main genre...\'** in the \'Main genre\' selection field. This will allow you to filter genres without considering the main genre of a film.')
+
 # ===============================
 # region AND/OR jack in the box
 # ===============================
@@ -128,14 +132,12 @@ def AND_OR():
 # region Genre list
 # ===============================
 
-st.write('**Genre:**')
-
 # Define initialize and cache genre list
 @st.cache_data
 def genre_list():
     genre_list = sorted(IMDb_df.columns[8:34 + 1].tolist())
     genre_list.insert(0, 'No preference for a main genre...')
-    genre_list.insert(0, 'No preference...')
+    genre_list.insert(0, 'No preference for any genre...')
     return genre_list
 
 # Run genre list
@@ -144,51 +146,46 @@ genres = genre_list()
 # endregion
 
 # select main genre 
-main_genre = st.selectbox('Select a main genre:', genres)
-
-# ascribe main genre to genre_selection object
-genre_selection = [main_genre]
+main_genre = st.selectbox('Main genre:', genres)
 
 # ===============================
 # region Genre if-statement
 # ===============================
 
-@st.cache_data
 def process_genre_selection(main_genre, genres):
-    if main_genre == "No preference...":
-        st.write("Note! Select a main genre to select additional genres.")
-        additional_genre_options = []
-        operator = 0
+    if main_genre == "No preference for any genre...":
+        genre_options = []
         genre_selection = []
-        max_genre_selection = 0
+        operator = 0
+        genre_tag = 0
     elif main_genre == "No preference for a main genre...":
-        st.write("You can select one or more genres below.")
-        additional_genre_options = [
-            genre for genre in genres if genre not in ["No preference...", 
-                                                    "No preference for a main genre..."]
+        genre_options = [
+            genre for genre in genres if genre not in ["No preference for any genre...", 
+                                                       "No preference for a main genre..."]
         ]
         genre_selection = st.multiselect(
-            "Additional genre(s):",
-            options=additional_genre_options
+            "Select a maximum of **three** genre(s):",
+            options=genre_options
         )
         operator = AND_OR()
-        max_genre_selection = 3
+        genre_tag = 1
     else:
-        additional_genre_options = [
-            genre for genre in genres if genre != main_genre and genre not in ["No preference...", 
-                                                                            "No preference for a main genre..."]
+        genre_options = [
+            genre for genre in genres if genre != main_genre and genre not in ["No preference for any genre...", 
+                                                                               "No preference for a main genre..."]
         ]
         additional_genres = st.multiselect(
-            "Additional genre(s):",
-            options = additional_genre_options    
+            "Select a maximum of **two** additional genre(s):",
+            options = genre_options    
         )
+        genre_selection = [main_genre]
         genre_selection.extend(additional_genres)
         operator = AND_OR()
-        max_genre_selection = 2
+        genre_tag = 2
 
-    return genre_selection, operator, max_genre_selection
+    return genre_selection, genre_options, operator, genre_tag
 
-genre_selection, operator, max_genre_selection = process_genre_selection(main_genre, genres)
+genre_selection, genre_options, operator, genre_tag = process_genre_selection(main_genre, genres)
 
 # endregion
 
