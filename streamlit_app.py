@@ -1,13 +1,22 @@
+# ===============================
+# region Imports
+# ===============================
 import streamlit as st
 import numpy as np
 import pandas as pd
 from datetime import datetime
 import gzip
+# endregion
 
+# ===============================
+# region Cookie pop-up
+# ===============================
+
+# Check if pop-up has been shown
 if "modal_shown" not in st.session_state:
    st.session_state.modal_shown = False
 
-# Cookies!!!
+# Show pop-up with buttons
 @st.dialog('Cookies!?')
 def show_modal():
    st.write('**NEVER ALLOW COOKIES!** We don\'t need :cookie: or :cupcake:!!! We want MUFFINS!')
@@ -30,14 +39,21 @@ def show_modal():
 
    st.write(f'**:red[{pop_up}]**')
 
+# Run pop-up and update session state
 if not st.session_state.modal_shown:
    show_modal()
    st.session_state.modal_shown = True
-      
-# Load data
+
+# endregion
+
+# ===============================
+# region Load data
+# ===============================
+
 # Define file paths
 IMDb_path = 'IMDb_data.csv.gz'
 
+# Define load and cache IMDb data
 @st.cache_data
 def load_data():
     # Load the gzipped CSV file into a pandas DataFrame
@@ -45,103 +61,216 @@ def load_data():
         data = pd.read_csv(file)
     return data
 
+# Load IMDb data
 IMDb_df = load_data()  # This is only executed once
 
-# Initialize
+# endregion
+
+# ===============================
+# region Initialize
+# ===============================
 if "rerun" not in st.session_state:
     st.session_state.rerun = True
 
-# Home page
+# endregion
+
+# ===============================
+# region Home page
+# ===============================
+
+# Title
 st.title("Thursday Filmday :clapper::film_projector:")
+
+# Web page introduction
 st.write(
     "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
 )
 
-# Film Chooser
+# endregion
+
+# ===============================
+# region 1. Film Chooser
+# ===============================
+
+# Title
 st.header("Film Chooser", divider="rainbow")
+
+# Introduction
 st.write('Welcome to the Film Chooser! This is a tool that might help you select choose a movie for the movie night. It is very simple to use. You just provide your preferences in the filter options below (see Search Filters). After you\'re done, quickly check your choices (Applied Filters). A table with options that are within your requirements will automatically update (see Possible Movies). Good luck chosing your movie!!!')
 
-# Process
-st.subheader('Search Filters', divider='grey')
+# ===============================
+# region 1.1 Search Filters
+# ===============================
 
-    # Genres
-# Initialize genre list
-@st.cache_data
-def genre_list():
-    genre_list = sorted(IMDb_df.columns[8:34 + 1].tolist())
-    genre_list.insert(0, 'No preference...')
-    return genre_list
+# Header
+st.subheader('Search Filters', divider='violet')
 
-genres = genre_list()
+# ===============================
+# region Genre selection
+# ===============================
 
-main_genre = st.selectbox('Select a main genre:', genres)
-genre_selection = [main_genre]
+# ===============================
+# region AND/OR jack in the box
+# ===============================
 
-# Disable additional genres if "No preference..." is selected
-if main_genre == "No preference...":
-    st.write("Note! Select a main genre to select additional genres.")
-    additional_genre_options = []
-
-    operator = 0
-else:
-    # Filter out the main genre from the additional genres list
-    additional_genre_options = [genre for genre in genres if genre != main_genre and genre != "No preference..."]
-
-    additional_genres = st.multiselect(
-        "Additional genre(s):",
-        options = additional_genre_options    
-    )
-
-    genre_selection.extend(additional_genres)
-
-            # AND/OR operator
+def AND_OR():
     if st.checkbox('AND/OR operator'):
         operator = 1
         st.write('**OR** operator is selected to pass your genres. Notice that this could give :red[**less precise**], but :red[**more movie options**]!')
     else:
         operator = 0
         st.write('**AND** operator is selected to pass your genres. Notice that this could give :red[**more precise**], but :red[**fewer movie options**]!')
+    return operator
 
-    # Year
+# endregion
+
+# ===============================
+# region Genre list
+# ===============================
+
+st.write('**Genre:**')
+
+# Define initialize and cache genre list
+@st.cache_data
+def genre_list():
+    genre_list = sorted(IMDb_df.columns[8:34 + 1].tolist())
+    genre_list.insert(0, 'No preference for a main genre...')
+    genre_list.insert(0, 'No preference...')
+    return genre_list
+
+# Run genre list
+genres = genre_list()
+
+# endregion
+
+# select main genre 
+main_genre = st.selectbox('Select a main genre:', genres)
+
+# ascribe main genre to genre_selection object
+genre_selection = [main_genre]
+
+# ===============================
+# region Genre if-statement
+# ===============================
+
+@st.cache_data
+def process_genre_selection(main_genre, genres):
+    if main_genre == "No preference...":
+        st.write("Note! Select a main genre to select additional genres.")
+        additional_genre_options = []
+        operator = 0
+        genre_selection = []
+        max_genre_selection = 0
+    elif main_genre == "No preference for a main genre...":
+        st.write("You can select one or more genres below.")
+        additional_genre_options = [
+            genre for genre in genres if genre not in ["No preference...", 
+                                                    "No preference for a main genre..."]
+        ]
+        genre_selection = st.multiselect(
+            "Additional genre(s):",
+            options=additional_genre_options
+        )
+        operator = AND_OR()
+        max_genre_selection = 3
+    else:
+        additional_genre_options = [
+            genre for genre in genres if genre != main_genre and genre not in ["No preference...", 
+                                                                            "No preference for a main genre..."]
+        ]
+        additional_genres = st.multiselect(
+            "Additional genre(s):",
+            options = additional_genre_options    
+        )
+        genre_selection.extend(additional_genres)
+        operator = AND_OR()
+        max_genre_selection = 2
+
+    return genre_selection, operator, max_genre_selection
+
+genre_selection, operator, max_genre_selection = process_genre_selection(main_genre, genres)
+
+# endregion
+
+st.divider()
+
+# endregion
+
+# ===============================
+# region Simple filter parameters
+# ===============================
+
+# year
 min_year = IMDb_df['startYear'].min()
 max_year = datetime.now().year
-selected_years = st.slider("Range of premiere years:", 
-                   min_year, max_year,
-                   (1970, max_year),
-                   step=1)
+default_min_year = 1970
+default_max_year = max_year
 
-    # Time
+# time 
 min_time = 30
 max_time = 240
-selected_time = st.slider("Range of film duration in minutes:", 
-                   min_time, max_time,
-                   (60, 120),
-                   step=5)
+default_min_time = 60
+default_max_time = 120
 
-    # Ratings
+# ratings
 min_rating = 1
-max_rating = 10 
-selected_rating = st.slider("Range of film IMDb ratings:", 
-               min_rating, max_rating,
-               (6, 10))
+max_rating = 10
+default_min_rating = 6
+default_max_rating = max_rating
 
-    # Votes
+# votes
 min_votes = 0
 max_votes = 500000
+default_min_votes = 100000
+step_size = 1000
+
+# endregion
+
+# ===============================
+# region Simple filters
+# ===============================    
+
+# year slider
+st.write('**Year:**')
+selected_years = st.slider("Range of premiere years:", 
+                   min_year, max_year,
+                   (default_min_year, default_max_year),
+                   step=1)
+st.divider()
+
+# time slider
+st.write('**Duration:**')
+selected_time = st.slider("Range of film duration in minutes:", 
+                   min_time, max_time,
+                   (default_min_time, default_max_time),
+                   step=5)
+st.divider()
+
+# ratings slider
+st.write('**Rating:**')
+selected_rating = st.slider("Range of film IMDb ratings:", 
+               min_rating, max_rating,
+               (default_min_rating, default_max_rating))
+st.divider()
+
+# votes slider
+st.write('**Votes:**')
 selected_votes = st.slider("Minimum number of votes for the IMDb film rating (the blockbusters have at least 200,000 votes):", 
-               min_votes, max_votes, 100000,
-               step=1000)
+               min_votes, max_votes, 
+               default_min_votes,
+               step=step_size)
+
+# endregion
+
+# endregion
 
 # UI and buttons
-st.subheader('Applied Filters', divider='grey')
+st.subheader('Applied Filters', divider='violet')
 
 left_column, right_column = st.columns(2)
 
 with left_column:
         st.write('**Selected values:**')
-
-                # Title
-        #st.write(print(selected_title))
 
             # Year
         st.write(f"Year range: **{selected_years[0]}** and **{selected_years[1]}**")
@@ -251,21 +380,34 @@ with right_column:
     
 st.write(top_10.iloc[:, 1:])
 
-# Movie Stats
+# endregion
+
+# ===============================
+# region Movie Stats
+# ===============================
 st.header("Movie Stats", divider="rainbow")
 
 st.write(
     'This page is still under construction'
 )
 
-# Film Archive
+# endregion
+
+# ===============================
+# region Film Archive
+# ===============================
 st.header("Film Archive", divider="rainbow")
 
 st.write(
     'This page is still under construction'
 )
 
-# Footer at the bottom
+# endregion
+
+# ===============================
+# region Footer
+# ===============================
+
 st.markdown(
     """
     <style>
@@ -285,3 +427,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+# endregion
