@@ -5,34 +5,34 @@ from datetime import datetime
 import gzip
 
 if "modal_shown" not in st.session_state:
-    st.session_state.modal_shown = False
+   st.session_state.modal_shown = False
 
 # Cookies!!!
 @st.dialog('Cookies!?')
 def show_modal():
-    st.write('We don\'t need :cookie: or :cupcake:!!! The big data companies just want your data to sell to obscure third parties that try to sell stuff you don\'t need! They feed the consumers and destroy the world! **NEVER ALLOW COOKIES!** We want MUFFINS!')
-    
-    gift = 'https://www.youtube.com/watch?v=kwgYSfqO0fg'
-    pop_up = ''
+   st.write('**NEVER ALLOW COOKIES!** We don\'t need :cookie: or :cupcake:!!! We want MUFFINS!')
+   
+   gift = 'https://www.youtube.com/watch?v=kwgYSfqO0fg'
+   pop_up = ''
 
-    col1, col2, col3 = st.columns([5, 5, 10])
+   col1, col2, col3 = st.columns([5, 5, 10])
 
-    with col1:
-        if st.button("Bake a :cookie:"):
-            pop_up = "YOU FUCK! CAN'T YOU READ OR THINK!?"
+   with col1:
+       if st.button("Bake a :cookie:"):
+           pop_up = "WHY!? Don\'t give your data!"
 
-    with col2:
-        if st.button("Bake a :cupcake:"):
-            pop_up = 'YOU DISSAPONTED ME, YOU\'RE MUM AND THE WORLD!'
+   with col2:
+       if st.button("Bake a :cupcake:"):
+           pop_up = 'DISSAPOINTMENT ACHIEVED!'
 
-    with col3:
-        st.link_button(':gift:', gift)
+   with col3:
+       st.link_button(':gift:', gift)
 
-    st.write(f'**:red[{pop_up}]**')
+   st.write(f'**:red[{pop_up}]**')
 
 if not st.session_state.modal_shown:
-    show_modal()
-    st.session_state.modal_shown = True
+   show_modal()
+   st.session_state.modal_shown = True
       
 # Load data
 # Define file paths
@@ -65,27 +65,42 @@ st.write('Welcome to the Film Chooser! This is a tool that might help you select
 st.subheader('Search Filters', divider='grey')
 
     # Genres
-genres = sorted(IMDb_df.columns[7:33 + 1].tolist())
-genres.insert(0, 'No preference...')
-selected_genre = st.multiselect(
-    "Genre(s):",
-    (genres)
-)
+# Initialize genre list
+@st.cache_data
+def genre_list():
+    genre_list = sorted(IMDb_df.columns[8:34 + 1].tolist())
+    genre_list.insert(0, 'No preference...')
+    return genre_list
 
-    # AND/OR operator
-if st.checkbox('AND/OR operator'):
-    operator = 1
-    st.write('Currently, the **OR** operator is selected to pass your genres. Notice that this could give :red[**less precise**], but :red[**more movie options**]!')
-else:
+genres = genre_list()
+
+main_genre = st.selectbox('Select a main genre:', genres)
+genre_selection = [main_genre]
+
+# Disable additional genres if "No preference..." is selected
+if main_genre == "No preference...":
+    st.write("Note! Select a main genre to select additional genres.")
+    additional_genre_options = []
+
     operator = 0
-    st.write('Currently, the **AND** operator is selected to pass your genres. Notice that this could give :red[**more precise**], but :red[**fewer movie options**]!')
+else:
+    # Filter out the main genre from the additional genres list
+    additional_genre_options = [genre for genre in genres if genre != main_genre and genre != "No preference..."]
 
-    # Title
-#titles = sorted(IMDb_df['primaryTitle'].unique().tolist())
-#selected_title = st.multiselect(
-##    "Title:",
-#    (titles),
-#)
+    additional_genres = st.multiselect(
+        "Additional genre(s):",
+        options = additional_genre_options    
+    )
+
+    genre_selection.extend(additional_genres)
+
+            # AND/OR operator
+    if st.checkbox('AND/OR operator'):
+        operator = 1
+        st.write('**OR** operator is selected to pass your genres. Notice that this could give :red[**less precise**], but :red[**more movie options**]!')
+    else:
+        operator = 0
+        st.write('**AND** operator is selected to pass your genres. Notice that this could give :red[**more precise**], but :red[**fewer movie options**]!')
 
     # Year
 min_year = IMDb_df['startYear'].min()
@@ -114,16 +129,8 @@ selected_rating = st.slider("Range of film IMDb ratings:",
 min_votes = 0
 max_votes = 500000
 selected_votes = st.slider("Minimum number of votes for the IMDb film rating (the blockbusters have at least 200,000 votes):", 
-               min_votes, max_votes,
+               min_votes, max_votes, 100000,
                step=1000)
-
-    # Director
-#director = IMDb_df['nmDirector_1', 'nmDirector_2'].unique().tolist()
-#director.insert(0, 'No preference')
-#selected_director = st.selectbox(
-#    "Director:",
-#    (director),
-#)
 
 # UI and buttons
 st.subheader('Applied Filters', divider='grey')
@@ -159,10 +166,10 @@ with right_column:
         s = ''
 
         # Genres
-        if len(selected_genre) > 3:
-            st.error("You can select a maximum of 3 genres!")
+        if len(genre_selection) > 3:
+            st.error("You can select a maximum of 2 additional genres!")
         else:
-            for i in selected_genre:
+            for i in genre_selection:
                 s += "- " + i + "\n"
             
             if s:
@@ -179,11 +186,11 @@ filters = (
 )
 
 # Apply genre-based filtering if necessary
-if selected_genre and 'No preference...' not in selected_genre:
+if genre_selection and 'No preference...' not in genre_selection:
     if operator == 0:  # AND condition
-        genre_filter = (IMDb_df[selected_genre] == 1).all(axis=1)
+        genre_filter = (IMDb_df[genre_selection] == 1).all(axis=1)
     elif operator == 1:  # OR condition
-        genre_filter = (IMDb_df[selected_genre].sum(axis=1) > 0)
+        genre_filter = (IMDb_df[genre_selection].sum(axis=1) > 0)
     filters &= genre_filter
 
 # Apply the combined filter to the DataFrame
@@ -203,7 +210,7 @@ new_df = pd.DataFrame(filtered_data)
 
 st.write(new_df.iloc[:, 1:].reset_index(drop=True))
 
-if 'No preference...' in selected_genre:
+if 'No preference...' in genre_selection:
     warning = f':red[**Warning!** Genre is not filtered because \'No preference...\' is selected!]'
 else:
     warning = ''
@@ -256,4 +263,25 @@ st.header("Film Archive", divider="rainbow")
 
 st.write(
     'This page is still under construction'
+)
+
+# Footer at the bottom
+st.markdown(
+    """
+    <style>
+        .footer {
+            width: 100%;
+            background-color: #f9f9f9;
+            text-align: center;
+            padding: 10px 0;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+    </style>
+    <div class="footer">
+        <p>The Tursday Filmday web page was made possible by <a href="https://eelslap.com/" target="_blank">ADHD hyperfocus</a>, <a href="https://streamlit.io/" target="_blank">Streamlit</a> and <a href="https://developer.imdb.com/" target="_blank">IMDb Developer</a>
+    </div>
+    """,
+    unsafe_allow_html=True
 )
