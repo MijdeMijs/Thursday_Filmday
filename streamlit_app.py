@@ -153,6 +153,7 @@ main_genre = st.selectbox('Main genre:', genres)
 def process_genre_selection(main_genre, genres):
     if main_genre == "No preference for any genre...":
         genre_options = []
+        other_genres = []
         genre_selection = []
         operator = 0
         genre_tag = 0
@@ -161,10 +162,11 @@ def process_genre_selection(main_genre, genres):
             genre for genre in genres if genre not in ["No preference for any genre...", 
                                                        "No preference for a main genre..."]
         ]
-        genre_selection = st.multiselect(
+        other_genres = st.multiselect(
             "Select a maximum of **three** genre(s):",
             options=genre_options
         )
+        genre_selection = other_genres.copy()
         operator = AND_OR()
         genre_tag = 1
     else:
@@ -172,18 +174,29 @@ def process_genre_selection(main_genre, genres):
             genre for genre in genres if genre != main_genre and genre not in ["No preference for any genre...", 
                                                                                "No preference for a main genre..."]
         ]
-        additional_genres = st.multiselect(
+        other_genres = st.multiselect(
             "Select a maximum of **two** additional genre(s):",
             options = genre_options    
         )
         genre_selection = [main_genre]
-        genre_selection.extend(additional_genres)
+        genre_selection.extend(other_genres)
         operator = AND_OR()
         genre_tag = 2
 
-    return genre_selection, genre_options, operator, genre_tag
+    return genre_options, other_genres, genre_selection, operator, genre_tag
 
-genre_selection, genre_options, operator, genre_tag = process_genre_selection(main_genre, genres)
+genre_options, other_genres, genre_selection, operator, genre_tag = process_genre_selection(main_genre, genres)
+
+# endregion
+
+# ===============================
+# region Check length
+# ===============================
+
+if genre_tag == 1 and len(genre_selection) > 3:
+            st.error("You can select a maximum of 3 genres!")
+elif genre_tag == 2 and len(genre_selection) > 3:
+            st.error("You can select a maximum of 2 additional genres!")
 
 # endregion
 
@@ -259,48 +272,92 @@ selected_votes = st.slider("Minimum number of votes for the IMDb film rating (th
 
 # endregion
 
-# UI and buttons
+# ===============================
+# region 1.2 Applied Filters
+# ===============================
+
 st.subheader('Applied Filters', divider='violet')
 
+st.write('Here you see a concise overview of the currently applied filters:')
+
+# ===============================
+# region Left & right layout column
+# ===============================
+
 left_column, right_column = st.columns(2)
+
+# ===============================
+# region Left layout column
+# ===============================
 
 with left_column:
         st.write('**Selected values:**')
 
-            # Year
+        # year
         st.write(f"Year range: **{selected_years[0]}** and **{selected_years[1]}**")
 
-                    # Time
+        # time
         st.write(f"Film duration range: **{selected_time[0]}** and **{selected_time[1]}**")
 
-            # Ratings
+        # ratings
         st.write(f"IMDb rating range: **{selected_rating[0]}** and **{selected_rating[1]}**")
 
-            # Votes
+        # votes
         st.write(f"Minimum number of IMDb votes: **{selected_votes}**")
 
-            # Director
-        #st.write(print(selected_director))
+# endregion
+
+# ===============================
+# region Right layout column
+# ===============================
 
 with right_column:
         st.write('**Selected genres:**')
 
-                # Genres
+        # Genres
         # Initialize the string variable
         s = ''
 
         # Genres
         if len(genre_selection) > 3:
-            st.error("You can select a maximum of 2 additional genres!")
-        else:
+            st.error("More that 3 genres are selected!")
+        elif genre_tag == 1:
             for i in genre_selection:
-                s += "- " + i + "\n"
-            
+               s += "- " + i + "\n"            
             if s:
                 st.markdown(s)
+            else:
+                st.write('No genres selected...')
+        elif genre_tag == 2:
+            st.write(f'Main genre: **{main_genre}**')
+            filtered_genre_selection = [
+                 genre for genre in genre_selection if genre != main_genre
+            ]
+            st.write('Additional genre(s):')
+            for i in filtered_genre_selection:
+                s += "- " + i + "\n"            
+            if s:
+                st.markdown(s)
+            else:
+                st.write('No additional genres selected...')
+        else:
+            st.write('No genres selected...')
 
-# Possible Movies List
-st.subheader('Possible Movies', divider='grey')
+# endregion
+
+# endregion
+
+# endregion
+
+# ===============================
+# region 1.3 Possible Movies
+# ===============================
+
+st.subheader('Possible Movies', divider='violet')
+
+# ===============================
+# region Define filters
+# ===============================
 
 filters = (
     IMDb_df['startYear'].between(selected_years[0], selected_years[1]) &
@@ -339,6 +396,8 @@ else:
     warning = ''
 
 st.write(warning)
+
+# endregion
 
 st.subheader('Visit IMDb Page', divider='grey')
 
