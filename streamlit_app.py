@@ -436,8 +436,11 @@ def display_filtered_df(filtered_df):
 display_df = display_filtered_df(filtered_df)
 
 # Show display_df or error message to user
-if display_df.empty:
-    display_df = st.error('No movies found with the chosen filters!')
+if (genre_tag == 1 and len(genre_selection) > 3) or (genre_tag == 2 and len(genre_selection) > 2):
+    # Error message too many genres
+    st.error('More than 3 genres are selected!')
+elif display_df.empty:
+    display_df = st.error('No movies found within the boundaries of the chosen filters!')
 else:
     st.write(f'Found **{len(display_df)}** films within your chosen filters:')
     st.write(display_df.iloc[:, 1:].reset_index(drop=True))
@@ -448,9 +451,11 @@ else:
 # region No genre warning
 # ===============================
 
-if not genre_selection:
-    warning = f':red[**Warning!** No filter applied on genre!]'
-    st.write(warning)
+if main_genre in ['No preference for any genre...', 
+                  'No preference for a main genre...']:
+    if not genre_selection:
+        warning = ':red[**Warning!** No filter applied on genre!]'
+        st.write(warning)
 
 # endregion
 
@@ -460,17 +465,18 @@ if not genre_selection:
 # region 1.4 Visit IMDb Page
 # ===============================
 
-st.subheader('Visit IMDb Page', divider='grey')
+st.subheader('Visit IMDb Page', divider='violet')
 
 # ===============================
 # region If-statement show Visit IMDb Page
 # ===============================
 
 if (genre_tag == 1 and len(genre_selection) > 3) or (genre_tag == 2 and len(genre_selection) > 2):
-    
-    # Error message genre
-    st.error('Unabble to filter due to genre selection!')
-
+    # Error message too many genres
+    st.error('More than 3 genres are selected!')
+elif display_df.empty:
+    # Error message empty df
+    st.error('No movies found within the boundaries of the chosen filters!')
 else:
     # ===============================
     # region Top selection
@@ -523,7 +529,6 @@ else:
 
         # Select on column display_df is sorted
         sort_column = st.selectbox("Select a column to sort by:", display_df.columns[[6, 2, 3, 7]])
-
         # Descending or ascending
         if st.checkbox('Descending or ascending'):
             ascent = True
