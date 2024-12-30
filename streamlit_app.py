@@ -26,7 +26,7 @@ def show_modal():
    gift = 'https://www.youtube.com/watch?v=kwgYSfqO0fg'
    pop_up = ''
 
-   pop_up_col1, pop_up_col2, pop_up_col3 = st.columns([5, 5, 10])
+   pop_up_col1, pop_up_col2, pop_up_col3 = st.columns([6, 6, 11])
 
    with pop_up_col1:
        if st.button("Bake a :cookie:"):
@@ -467,6 +467,8 @@ if main_genre in ['No preference for any genre...',
 
 st.subheader('Visit IMDb Page', divider='violet')
 
+st.write('Here, you can select a Top Tier List of films and directly visit their IMDb film page! Start by selecting how large you want this list to be (**Top Tier List**). Then, select a movie feature on which you would like to base the top list (**Select a movie feature**). By default, the movies with the best IMDb ratings are placed at the top. You can also turn the sorting around by ticking the **Descending or ascending** checkbox. Now, you can select a film from the Top Tier List (**Select film**). If you click the button **Visit IMDb film page!**, you\'ll be redirected to the IMDb film page of the selected film! There you can find aditional information and trailers.')
+
 # ===============================
 # region If-statement show Visit IMDb Page
 # ===============================
@@ -482,11 +484,11 @@ else:
     # region Top selection
     # ===============================
 
-    top_n_choice = st.selectbox('Select a top (10 - 1000):', ['Top 10', 
-                                                            'Top 50', 
-                                                            'Top 100', 
-                                                            'Top 500',
-                                                            'Top 1000'])
+    top_n_choice = st.selectbox('Top Tier List:', ['Top 10', 
+                                                   'Top 50', 
+                                                   'Top 100', 
+                                                   'Top 500',
+                                                   'Top 1000'])
 
     top_n_mapping = {
         'Top 10': 10,
@@ -528,14 +530,14 @@ else:
     with left_column:
 
         # Select on column display_df is sorted
-        sort_column = st.selectbox("Select a column to sort by:", display_df.columns[[6, 2, 3, 7]])
+        sort_column = st.selectbox("Select a movie feature:", display_df.columns[[6, 2, 3, 7]])
         # Descending or ascending
         if st.checkbox('Descending or ascending'):
             ascent = True
-            st.write(f'Currently, **{sort_column}** is ordered in ascending order.')
+            st.write(f'Currently, **{sort_column}** is ordered in **ascending** order.')
         else:
             ascent = False
-            st.write(f'Currently, **{sort_column}** is ordered in descending order.')
+            st.write(f'Currently, **{sort_column}** is ordered in **descending** order.')
         
         # Run sorting fuction with user inputs
         top_list = sort_top(display_df, sort_column, ascent, top_n)
@@ -549,7 +551,7 @@ else:
     with right_column:
 
         # Select a movie
-        IMDb_link = st.selectbox("Select IMDb film page:", top_list['Film'].unique())
+        IMDb_link = st.selectbox("Select film:", top_list['Film'].unique())
         
         # Get film ID
         ID = top_list[top_list['Film'] == IMDb_link].iloc[0, 0]
@@ -595,6 +597,13 @@ else:
 # endregion
 
     st.divider()
+
+    if ascent == True:
+        ascent_descent = 'ascending'
+    else:
+        ascent_descent = 'descending'    
+
+    st.write(f'Top **{top_n} / {len(display_df)}** based on **{ascent_descent} {sort_column}**:')
 
     st.write(top_list.iloc[:, 1:])
 
