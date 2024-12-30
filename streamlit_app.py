@@ -100,7 +100,6 @@ st.write('Welcome to the Film Chooser! This is a tool that might help you select
 # region 1.1 Search Filters
 # ===============================
 
-# Header
 st.subheader('Search Filters', divider='violet')
 
 # ===============================
@@ -450,6 +449,10 @@ if not genre_selection:
 
 # endregion
 
+# ===============================
+# region 1.4 Visit IMDb Page
+# ===============================
+
 st.subheader('Visit IMDb Page', divider='grey')
 
 # ===============================
@@ -542,6 +545,8 @@ with right_column:
 st.divider()
 
 st.write(top_list.iloc[:, 1:])
+
+# endregion
 
 # endregion
 
