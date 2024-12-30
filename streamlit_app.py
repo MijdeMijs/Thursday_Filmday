@@ -4,6 +4,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
+import time
 from datetime import datetime
 import gzip
 
@@ -551,8 +552,36 @@ else:
         # Define IMDb URL
         url = f'https://www.imdb.com/title/{ID}/'
 
-        # Create button with IMDb link 
-        st.link_button("Visit the IMDb film page!", url)
+        # Link button with spinner
+        spin_col1, spin_col2 = st.columns([2, 2])
+
+        # Link button in first column
+        with spin_col1:
+            st.link_button("Visit IMDb film page!", url)
+
+        # Spinner in second column
+        with spin_col2:
+            with st.spinner('Loading link...'):
+                
+                # Load 1 second                
+                time.sleep(1)
+
+            # CSS to align spinner
+            st.markdown(
+            """
+            <style>
+            .stButton button {
+                margin-right: 10px;
+            }
+            .stSpinner {
+                display: inline-block;
+                vertical-align: middle;
+                margin-top: 7px;                
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+            )
         
     # endregion
 
