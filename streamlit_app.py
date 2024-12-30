@@ -94,13 +94,15 @@ st.write(
 st.header("Film Chooser", divider="rainbow")
 
 # Introduction
-st.write('Welcome to the Film Chooser! This is a tool that might help you select choose a movie for the movie night. It is very simple to use. You just provide your preferences in the filter options below (see Search Filters). After you\'re done, quickly check your choices (Applied Filters). A table with options that are within your requirements will automatically update (see Possible Movies). Good luck chosing your movie!!!')
+st.write('Welcome to the Film Chooser! This is a tool that might help you select choose a movie for the movie night. It is very simple to use. You just provide your preferences in the filter options below (see [Search Filters](#search-filters)). After you\'re done, quickly check your choices (see [Applied Filters](#applied-filters)). A table with options that are within your requirements will automatically update (see [Possible Movies](#possible-movies)). You can easily visit the IMDb film pages with [Visit IMDb Page](#visit-imdb-page). Good luck chosing your movie!!!')
 
 # ===============================
 # region 1.1 Search Filters
 # ===============================
 
 st.subheader('Search Filters', divider='violet')
+
+st.write('(the blockbusters have at least 200,000 votes)')
 
 # ===============================
 # region Genre selection
@@ -219,16 +221,17 @@ default_min_time = 60
 default_max_time = 120
 
 # ratings
-min_rating = 1
-max_rating = 10
-default_min_rating = 6
+min_rating = float(1)
+max_rating = float(10)
+default_min_rating = float(6)
 default_max_rating = max_rating
+ratings_step_size = 0.5
 
 # votes
 min_votes = 0
 max_votes = 500000
 default_min_votes = 100000
-step_size = 1000
+votes_step_size = 1000
 
 # endregion
 
@@ -238,7 +241,7 @@ step_size = 1000
 
 # year slider
 st.write('**Year:**')
-selected_years = st.slider("Range of premiere years:", 
+selected_years = st.slider("Range of years in which a film went into premiere:", 
                    min_year, max_year,
                    (default_min_year, default_max_year),
                    step=1)
@@ -255,16 +258,19 @@ st.divider()
 # ratings slider
 st.write('**Rating:**')
 selected_rating = st.slider("Range of film IMDb ratings:", 
-               min_rating, max_rating,
-               (default_min_rating, default_max_rating))
+               min_value=min_rating,
+               max_value=max_rating,
+               value=(default_min_rating, default_max_rating),
+               step=ratings_step_size,
+               format="%.1f")
 st.divider()
 
 # votes slider
 st.write('**Votes:**')
-selected_votes = st.slider("Minimum number of votes for the IMDb film rating (the blockbusters have at least 200,000 votes):", 
+selected_votes = st.slider("Minimum number of votes for the IMDb film rating:", 
                min_votes, max_votes, 
                default_min_votes,
-               step=step_size)
+               step=votes_step_size)
 
 # endregion
 
@@ -456,95 +462,107 @@ if not genre_selection:
 st.subheader('Visit IMDb Page', divider='grey')
 
 # ===============================
-# region Top selection
+# region If-statement show Visit IMDb Page
 # ===============================
 
-top_n_choice = st.selectbox('Select a top (10 - 1000):', ['Top 10', 
-                                                          'Top 50', 
-                                                          'Top 100', 
-                                                          'Top 500',
-                                                          'Top 1000'])
-
-top_n_mapping = {
-    'Top 10': 10,
-    'Top 50': 50,
-    'Top 100': 100,
-    'Top 500': 500,
-    'Top 1000': 1000
-}
-
-top_n = top_n_mapping[top_n_choice]
-
-# endregion
-
-# ===============================
-# region Top sort function
-# ===============================
-
-@st.cache_data
-def sort_top(display_df, sort_column, ascent, top_n):
-
-    # Sort display_df dynamically and select the first n-rows (top_n) of sorted display_df
-    top_n_list = display_df.sort_values(by=sort_column, 
-                                        ascending=ascent).reset_index(drop=True).head(top_n)
+if (genre_tag == 1 and len(genre_selection) > 3) or (genre_tag == 2 and len(genre_selection) > 2):
     
-    return top_n_list
+    # Error message genre
+    st.error('Unabble to filter due to genre selection!')
+
+else:
+    # ===============================
+    # region Top selection
+    # ===============================
+
+    top_n_choice = st.selectbox('Select a top (10 - 1000):', ['Top 10', 
+                                                            'Top 50', 
+                                                            'Top 100', 
+                                                            'Top 500',
+                                                            'Top 1000'])
+
+    top_n_mapping = {
+        'Top 10': 10,
+        'Top 50': 50,
+        'Top 100': 100,
+        'Top 500': 500,
+        'Top 1000': 1000
+    }
+
+    top_n = top_n_mapping[top_n_choice]
+
+    # endregion
+
+    # ===============================
+    # region Top sort function
+    # ===============================
+
+    @st.cache_data
+    def sort_top(display_df, sort_column, ascent, top_n):
+
+        # Sort display_df dynamically and select the first n-rows (top_n) of sorted display_df
+        top_n_list = display_df.sort_values(by=sort_column, 
+                                            ascending=ascent).reset_index(drop=True).head(top_n)
+        
+        return top_n_list
+
+    # endregion
+
+    # ===============================
+    # region Left & right layout column
+    # ===============================
+
+    left_column, right_column = st.columns(2)
+
+    # ===============================
+    # region Left layout column
+    # ===============================
+
+    with left_column:
+
+        # Select on column display_df is sorted
+        sort_column = st.selectbox("Select a column to sort by:", display_df.columns[[6, 2, 3, 7]])
+
+        # Descending or ascending
+        if st.checkbox('Descending or ascending'):
+            ascent = True
+            st.write(f'Currently, **{sort_column}** is ordered in ascending order.')
+        else:
+            ascent = False
+            st.write(f'Currently, **{sort_column}** is ordered in descending order.')
+        
+        # Run sorting fuction with user inputs
+        top_list = sort_top(display_df, sort_column, ascent, top_n)
+
+    # endregion
+
+    # ===============================
+    # region Right layout column
+    # ===============================
+
+    with right_column:
+
+        # Select a movie
+        IMDb_link = st.selectbox("Select IMDb film page:", top_list['Film'].unique())
+        
+        # Get film ID
+        ID = top_list[top_list['Film'] == IMDb_link].iloc[0, 0]
+
+        # Define IMDb URL
+        url = f'https://www.imdb.com/title/{ID}/'
+
+        # Create button with IMDb link 
+        st.link_button("Visit the IMDb film page!", url)
+        
+    # endregion
+
+    # endregion
 
 # endregion
 
-# ===============================
-# region Left & right layout column
-# ===============================
+    st.divider()
 
-left_column, right_column = st.columns(2)
-
-# ===============================
-# region Left layout column
-# ===============================
-
-with left_column:
-
-    # Select on column display_df is sorted
-    sort_column = st.selectbox("Select a column to sort by:", display_df.columns[[6, 2, 3, 7]])
-
-    # Descending or ascending
-    if st.checkbox('Descending or ascending'):
-        ascent = True
-        st.write(f'Currently, **{sort_column}** is ordered in ascending order.')
-    else:
-        ascent = False
-        st.write(f'Currently, **{sort_column}** is ordered in descending order.')
-    
-    # Run sorting fuction with user inputs
-    top_list = sort_top(display_df, sort_column, ascent, top_n)
-
-# endregion
-
-# ===============================
-# region Right layout column
-# ===============================
-
-with right_column:
-
-    # Select a movie
-    IMDb_link = st.selectbox("Select IMDb film page:", top_list['Film'].unique())
-    
-    # Get film ID
-    ID = top_list[top_list['Film'] == IMDb_link].iloc[0, 0]
-
-    # Define IMDb URL
-    url = f'https://www.imdb.com/title/{ID}/'
-
-    # Create button with IMDb link 
-    st.link_button("Visit the IMDb film page!", url)
-    
-# endregion
-
-# endregion
-
-st.divider()
-
-st.write(top_list.iloc[:, 1:])
+    st.write(top_list.iloc[:, 1:])
 
 # endregion
 
