@@ -25,17 +25,17 @@ def show_modal():
    gift = 'https://www.youtube.com/watch?v=kwgYSfqO0fg'
    pop_up = ''
 
-   col1, col2, col3 = st.columns([5, 5, 10])
+   pop_up_col1, pop_up_col2, pop_up_col3 = st.columns([5, 5, 10])
 
-   with col1:
+   with pop_up_col1:
        if st.button("Bake a :cookie:"):
            pop_up = "WHY!? Don\'t give your data!"
 
-   with col2:
+   with pop_up_col2:
        if st.button("Bake a :cupcake:"):
            pop_up = 'DISSAPOINTMENT ACHIEVED!'
 
-   with col3:
+   with pop_up_col3:
        st.link_button(':gift:', gift)
 
    st.write(f'**:red[{pop_up}]**')
@@ -194,7 +194,7 @@ genre_options, other_genres, genre_selection, operator, genre_tag = process_genr
 
 if genre_tag == 1 and len(genre_selection) > 3:
             st.error("You can select a maximum of 3 genres!")
-elif genre_tag == 2 and len(genre_selection) > 3:
+elif genre_tag == 2 and len(genre_selection) > 2:
             st.error("You can select a maximum of 2 additional genres!")
 
 # endregion
@@ -277,8 +277,6 @@ selected_votes = st.slider("Minimum number of votes for the IMDb film rating (th
 
 st.subheader('Applied Filters', divider='violet')
 
-st.write('Here you see a concise overview of the currently applied filters:')
-
 # ===============================
 # region Left & right layout column
 # ===============================
@@ -318,7 +316,7 @@ with right_column:
         s = ''
 
         # Genres
-        if len(genre_selection) > 3:
+        if (genre_tag == 1 and len(genre_selection) > 3) or (genre_tag == 2 and len(genre_selection) > 2):
             st.error("More that 3 genres are selected!")
         elif genre_tag == 1:
             for i in genre_selection:
@@ -426,7 +424,7 @@ def display_filtered_df(filtered_df):
     display_df = pd.DataFrame(filtered_data)
 
     # Hide ID feature for user and re-index
-    return display_df.iloc[:, 1:].reset_index(drop=True)
+    return display_df
 
 # Run display_filtered_df()
 display_df = display_filtered_df(filtered_df)
@@ -435,52 +433,115 @@ display_df = display_filtered_df(filtered_df)
 if display_df.empty:
     display_df = st.error('No movies found with the chosen filters!')
 else:
-    st.write(display_df)
+    st.write(f'Found **{len(display_df)}** films within your chosen filters:')
+    st.write(display_df.iloc[:, 1:].reset_index(drop=True))
 
 # endregion
 
-if 'No preference...' in genre_selection:
-    warning = f':red[**Warning!** Genre is not filtered because \'No preference...\' is selected!]'
-else:
-    warning = ''
+# ===============================
+# region No genre warning
+# ===============================
 
-st.write(warning)
+if not genre_selection:
+    warning = f':red[**Warning!** No filter applied on genre!]'
+    st.write(warning)
+
+# endregion
 
 # endregion
 
 st.subheader('Visit IMDb Page', divider='grey')
 
+# ===============================
+# region Top selection
+# ===============================
+
+top_n_choice = st.selectbox('Select a top (10 - 1000):', ['Top 10', 
+                                                          'Top 50', 
+                                                          'Top 100', 
+                                                          'Top 500',
+                                                          'Top 1000'])
+
+top_n_mapping = {
+    'Top 10': 10,
+    'Top 50': 50,
+    'Top 100': 100,
+    'Top 500': 500,
+    'Top 1000': 1000
+}
+
+top_n = top_n_mapping[top_n_choice]
+
+# endregion
+
+# ===============================
+# region Top sort function
+# ===============================
+
+@st.cache_data
+def sort_top(display_df, sort_column, ascent, top_n):
+
+    # Sort display_df dynamically and select the first n-rows (top_n) of sorted display_df
+    top_n_list = display_df.sort_values(by=sort_column, 
+                                        ascending=ascent).reset_index(drop=True).head(top_n)
+    
+    return top_n_list
+
+# endregion
+
+# ===============================
+# region Left & right layout column
+# ===============================
+
 left_column, right_column = st.columns(2)
 
+# ===============================
+# region Left layout column
+# ===============================
+
 with left_column:
-    # Allow the user to select the sorting column
-    sort_column = st.selectbox("Select a column to sort by:", display_df.columns[[1, 2, 4, 5]])
 
-        # Ascending or descending
-    if st.checkbox('Ascending or descending'):
-        ascent = False
-        st.write(f'Currently, **{sort_column}** in descending order.')
-    else:
+    # Select on column display_df is sorted
+    sort_column = st.selectbox("Select a column to sort by:", display_df.columns[[6, 2, 3, 7]])
+
+    # Descending or ascending
+    if st.checkbox('Descending or ascending'):
         ascent = True
-        st.write(f'Currently, **{sort_column}** in ascending order.')
+        st.write(f'Currently, **{sort_column}** is ordered in ascending order.')
+    else:
+        ascent = False
+        st.write(f'Currently, **{sort_column}** is ordered in descending order.')
+    
+    # Run sorting fuction with user inputs
+    top_list = sort_top(display_df, sort_column, ascent, top_n)
 
-    # Sort the DataFrame dynamically
-    sorted_new_df = display_df.sort_values(by=sort_column, ascending=ascent).iloc[:, :-2].reset_index(drop=True)
+# endregion
 
-    # Select the first 10 rows of the sorted DataFrame
-    top_10 = sorted_new_df.head(10)
+# ===============================
+# region Right layout column
+# ===============================
 
 with right_column:
-    IMDb_link = st.selectbox("Select IMDb film page:", top_10['Film'].unique())
-    ID = top_10[top_10['Film'] == IMDb_link].iloc[0, 0]
 
-    # Define the URL you want to link to
+    # Select a movie
+    IMDb_link = st.selectbox("Select IMDb film page:", top_list['Film'].unique())
+    
+    # Get film ID
+    ID = top_list[top_list['Film'] == IMDb_link].iloc[0, 0]
+
+    # Define IMDb URL
     url = f'https://www.imdb.com/title/{ID}/'
 
-    # Create the button
+    # Create button with IMDb link 
     st.link_button("Visit the IMDb film page!", url)
     
-st.write(top_10.iloc[:, 1:])
+# endregion
+
+# endregion
+
+st.divider()
+
+st.write(top_list.iloc[:, 1:])
 
 # endregion
 
