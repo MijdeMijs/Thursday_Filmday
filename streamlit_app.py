@@ -178,8 +178,7 @@ def process_genre_selection(main_genre, genres):
             "Select a maximum of **two** additional genre(s):",
             options = genre_options    
         )
-        genre_selection = [main_genre]
-        genre_selection.extend(other_genres)
+        genre_selection = other_genres.copy()
         operator = AND_OR()
         genre_tag = 2
 
@@ -356,39 +355,89 @@ with right_column:
 st.subheader('Possible Movies', divider='violet')
 
 # ===============================
-# region Define filters
+# region Define & apply filters
 # ===============================
 
-filters = (
-    IMDb_df['startYear'].between(selected_years[0], selected_years[1]) &
-    IMDb_df['runtimeMinutes'].between(selected_time[0], selected_time[1]) &
-    IMDb_df['averageRating'].between(selected_rating[0], selected_rating[1]) &
-    (IMDb_df['numVotes'] >= selected_votes)
-)
+@st.cache_data
+def IMDb_filter(IMDb_df, 
+                selected_years, 
+                selected_time, 
+                selected_rating, 
+                selected_votes,
+                genre_tag, 
+                main_genre, 
+                operator, 
+                genre_selection):
+    
+    # Define static filters
+    filters = (
+        IMDb_df['startYear'].between(selected_years[0], selected_years[1]) &
+        IMDb_df['runtimeMinutes'].between(selected_time[0], selected_time[1]) &
+        IMDb_df['averageRating'].between(selected_rating[0], selected_rating[1]) &
+        (IMDb_df['numVotes'] >= selected_votes)
+    )
 
-# Apply genre-based filtering if necessary
-if genre_selection and 'No preference...' not in genre_selection:
-    if operator == 0:  # AND condition
-        genre_filter = (IMDb_df[genre_selection] == 1).all(axis=1)
-    elif operator == 1:  # OR condition
-        genre_filter = (IMDb_df[genre_selection].sum(axis=1) > 0)
-    filters &= genre_filter
+    # Add main genre filter if genre_tag = 2
+    if genre_tag == 2:
+        filters = filters & (IMDb_df['main_genre'] == main_genre)
 
-# Apply the combined filter to the DataFrame
-filtered_df = IMDb_df[filters]
+    # Apply genre-based filtering if necessary including AND/OR operator
+    if genre_tag != 0 :
+        if operator == 0:  # AND condition
+            genre_filter = (IMDb_df[genre_selection] == 1).all(axis=1)
+        elif operator == 1:  # OR condition
+            genre_filter = (IMDb_df[genre_selection].sum(axis=1) > 0)
+        filters &= genre_filter
 
-    # Make new df with possible film options
-filtered_data = {'ID': filtered_df['tconst'],
-                 'Film': filtered_df['primaryTitle'],
-                 'Year': filtered_df['startYear'],
-                 'Duration': filtered_df['runtimeMinutes'],
-                 'Main genre': filtered_df['main_genre'],
-                 'Additional genres': filtered_df['other_genres'],
-                 'IMDb Rating': filtered_df['averageRating'],
-                 'Number of votes': filtered_df['numVotes']}
-new_df = pd.DataFrame(filtered_data)
+    # Apply filters to IMDb_df
+    return IMDb_df[filters]
 
-st.write(new_df.iloc[:, 1:].reset_index(drop=True))
+# Run IMDb_filter() over IMDb_df based on filter settings by user
+filtered_df = IMDb_filter(IMDb_df, 
+                          selected_years, 
+                          selected_time, 
+                          selected_rating, 
+                          selected_votes,
+                          genre_tag, 
+                          main_genre, 
+                          operator, 
+                          genre_selection)
+
+# endregion
+
+# ===============================
+# region Display filtered movies
+# ===============================
+
+@st.cache_data
+def display_filtered_df(filtered_df):
+
+    # Feature selection for new df
+    filtered_data = {'ID': filtered_df['tconst'],
+                    'Film': filtered_df['primaryTitle'],
+                    'Year': filtered_df['startYear'],
+                    'Duration': filtered_df['runtimeMinutes'],
+                    'Main genre': filtered_df['main_genre'],
+                    'Additional genres': filtered_df['other_genres'],
+                    'IMDb Rating': filtered_df['averageRating'],
+                    'Number of votes': filtered_df['numVotes']}
+    
+    # Selected features to Pandas df
+    display_df = pd.DataFrame(filtered_data)
+
+    # Hide ID feature for user and re-index
+    return display_df.iloc[:, 1:].reset_index(drop=True)
+
+# Run display_filtered_df()
+display_df = display_filtered_df(filtered_df)
+
+# Show display_df or error message to user
+if display_df.empty:
+    display_df = st.error('No movies found with the chosen filters!')
+else:
+    st.write(display_df)
+
+# endregion
 
 if 'No preference...' in genre_selection:
     warning = f':red[**Warning!** Genre is not filtered because \'No preference...\' is selected!]'
@@ -405,7 +454,7 @@ left_column, right_column = st.columns(2)
 
 with left_column:
     # Allow the user to select the sorting column
-    sort_column = st.selectbox("Select a column to sort by:", new_df.columns[[1, 2, 4, 5]])
+    sort_column = st.selectbox("Select a column to sort by:", display_df.columns[[1, 2, 4, 5]])
 
         # Ascending or descending
     if st.checkbox('Ascending or descending'):
@@ -416,7 +465,7 @@ with left_column:
         st.write(f'Currently, **{sort_column}** in ascending order.')
 
     # Sort the DataFrame dynamically
-    sorted_new_df = new_df.sort_values(by=sort_column, ascending=ascent).iloc[:, :-2].reset_index(drop=True)
+    sorted_new_df = display_df.sort_values(by=sort_column, ascending=ascent).iloc[:, :-2].reset_index(drop=True)
 
     # Select the first 10 rows of the sorted DataFrame
     top_10 = sorted_new_df.head(10)
