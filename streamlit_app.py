@@ -7,6 +7,7 @@ import pandas as pd
 import time
 from datetime import datetime
 import gzip
+import toml
 
 # endregion
 
@@ -60,6 +61,9 @@ def load_data():
         data = pd.read_csv(file)
     
     IMDb_df_version = pd.to_datetime(data.iloc[0, 0])
+
+    data = data.iloc[1:].reset_index(drop=True)
+
     return data, IMDb_df_version
 
 # Load IMDb data
@@ -98,6 +102,18 @@ st.header("Film Chooser", divider="rainbow")
 
 # Introduction
 st.write('Welcome to the Film Chooser! This is a tool that might help you select choose a movie for the movie night. It is very simple to use. You just provide your preferences in the filter options below (see [Search Filters](#search-filters)). After you\'re done, quickly check your choices (see [Applied Filters](#applied-filters)). A table with options that are within your requirements will automatically update (see [Possible Movies](#possible-movies)). You can easily visit the IMDb film pages with [Visit IMDb Page](#visit-imdb-page). Good luck chosing your movie!!!')
+
+# Check data set version
+if IMDb_df_version.month == datetime.now().month:
+    IMDb_df_version = IMDb_df_version.strftime('%B %d, %Y')
+    #st.write()
+    text = f'*IMDb data version: **{IMDb_df_version}***'
+    st.markdown(f'<span style="font-size: 13px;">*IMDb data version: **{IMDb_df_version}***</span>', 
+                unsafe_allow_html=True)
+else:
+    IMDb_df_version = IMDb_df_version.strftime('%B %d, %Y')
+    st.markdown(f'<span style="font-size: 13px;">:red[***Notice!** Still using IMDb data version **{IMDb_df_version}**!*]</span>', 
+                unsafe_allow_html=True)
 
 # ===============================
 # region 1.1 Search Filters
@@ -212,7 +228,7 @@ st.divider()
 # ===============================
 
 # year
-min_year = IMDb_df['startYear'].min()
+min_year = int(IMDb_df['startYear'].min())
 max_year = datetime.now().year
 default_min_year = 1970
 default_max_year = max_year
@@ -639,24 +655,32 @@ st.write(
 # region Footer
 # ===============================
 
-st.markdown(
-    """
+# Custom CSS to adapt the footer to the browser's theme settings
+st.markdown("""
     <style>
+    @media (prefers-color-scheme: dark) {
         .footer {
-            width: 100%;
+            background-color: #333333;
+            color: #FFFFFF;
+        }
+    }
+    @media (prefers-color-scheme: light) {
+        .footer {
             background-color: #f9f9f9;
-            text-align: center;
-            padding: 10px 0;
-            margin-top: 20px;
-            font-size: 14px;
             color: #6c757d;
         }
+    }
+    .footer {
+             width: 100%;
+             text-align: center;
+             padding: 10px 0;
+             margin-top: 20px;
+             font-size: 14px;
+         }
     </style>
-    <div class="footer">
-        <p>The Tursday Filmday web page was made possible by <a href="https://eelslap.com/" target="_blank">ADHD hyperfocus</a>, <a href="https://streamlit.io/" target="_blank">Streamlit</a> and <a href="https://developer.imdb.com/" target="_blank">IMDb Developer</a>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+     <div class="footer">
+         <p>The Thursday Filmday web page was made possible by <a href="https://eelslap.com/" target="_blank">ADHD hyperfocus</a>, <a href="https://streamlit.io/" target="_blank">Streamlit</a> and <a href="https://developer.imdb.com/" target="_blank">IMDb Developer</a>
+     </div>
+    """, unsafe_allow_html=True)
 
 # endregion
