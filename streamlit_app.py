@@ -58,10 +58,12 @@ def load_data():
     # Load the gzipped CSV file into a pandas DataFrame
     with gzip.open('IMDb_data.csv.gz', 'rt', encoding='utf-8') as file:
         data = pd.read_csv(file)
-    return data
+    
+    IMDb_df_version = pd.to_datetime(data.iloc[0, 0])
+    return data, IMDb_df_version
 
 # Load IMDb data
-IMDb_df = load_data()
+IMDb_df, IMDb_df_version = load_data()
 
 # endregion
 
