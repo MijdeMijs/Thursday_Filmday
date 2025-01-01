@@ -101,7 +101,24 @@ st.write(
 st.header("Film Chooser", divider="rainbow")
 
 # Introduction
-st.write('Welcome to the Film Chooser! This is a tool that might help you select choose a movie for the movie night. It is very simple to use. You just provide your preferences in the filter options below (see [Search Filters](#search-filters)). After you\'re done, quickly check your choices (see [Applied Filters](#applied-filters)). A table with options that are within your requirements will automatically update (see [Possible Movies](#possible-movies)). You can easily visit the IMDb film pages with [Visit IMDb Page](#visit-imdb-page). Good luck chosing your movie!!!')
+st.write('''Welcome to the Film Chooser! This is a tool that might help you to choose a 
+         movie for the movie night. It is very simple to use, but here are some tips:''')
+
+st.write('''[Search Filters](#search-filters) - Here you select the values for the filters 
+         that are applied. When starting the Thursday Filmday app, default settings are 
+         already set. In genreal, the filters explain themselves. If you select one or 
+         more genres, you can first select a main genre and then select additional genres 
+         if you like. If you don\'t care about the genre of a movie, you can select the 
+         option **\'No preference for any genre...\'** (default) in the \'Main genre\' 
+         selection field. This option won\'t filter films by genre. If you do want to 
+         select a genre, but you don\'t care what the main genre of a movie is, choose 
+         **\'No preference for a main genre...\'** in the \'Main genre\' selection field. 
+         This will allow you to filter genres without considering the main genre of a 
+         film. Becareful with the votes setting. It is easy to exclude good movies with 
+         settings that might seem low. If you\'d like to watch a blockbuster movie, it is 
+         recomended to set a high filter on votes (min. 200000)''')
+
+st.write(' After you\'re done, quickly check your choices (see [Applied Filters](#applied-filters)). A table with options that are within your requirements will automatically update (see [Possible Movies](#possible-movies)). You can easily visit the IMDb film pages with [Visit IMDb Page](#visit-imdb-page). Good luck chosing your movie!!!')
 
 # Check data set version
 if IMDb_df_version.month == datetime.now().month:
@@ -129,7 +146,7 @@ st.write('(the blockbusters have at least 200,000 votes)')
 
 st.write('**Genre:**')
 
-st.write('Select the genres that you would like to watch. First select a main genre and then select additional genres if you like. If you don\'t care about the genre of a movie, you can select the option **\'No preference for any genre...\'** (default) in the \'Main genre\' selection field. This option won\'t filter films by genre. If you do want to select a genre, but you don\'t care what the main genre of a movie is, choose **\'No preference for a main genre...\'** in the \'Main genre\' selection field. This will allow you to filter genres without considering the main genre of a film.')
+st.write('Select the genres that you would like to watch.')
 
 # ===============================
 # region AND/OR jack in the box
