@@ -87,9 +87,21 @@ if "rerun" not in st.session_state:
 st.title("Thursday Filmday :clapper::film_projector:")
 
 # Web page introduction
-st.write(
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
-)
+st.write("""
+    Welcome to **Thursday Filmday**! :clapper:
+
+    This app is designed to enhance your movie night experience with three exciting sections:
+
+    1. **Movie Chooser**: This section helps you select the perfect film for your movie night. Whether you're in the mood for a comedy, drama, or action-packed thriller, the Movie Chooser will guide you to the best options.
+
+    2. **Movie Stats**: Dive into some fun statistics about all the movies we've watched together. Discover interesting trends, favorite genres, and more. It's a great way to see our collective movie-watching habits!
+
+    3. **Film Archive**: Here, you can browse through a comprehensive list of all the films we've watched and suggested. It's a handy reference to revisit past favorites or find new recommendations.
+
+    I've also hidden some fun easter eggs throughout the app for you to discover. I put a lot of effort into creating this page, so I hope you enjoy it. Please be gentle, as the app might not be the most efficient in the world.
+
+    Enjoy your movie night and happy watching! :popcorn:
+    """)
 
 # endregion
 
@@ -104,32 +116,58 @@ st.header("Film Chooser", divider="rainbow")
 st.write('''Welcome to the Film Chooser! This is a tool that might help you to choose a 
          movie for the movie night. It is very simple to use, but here are some tips:''')
 
-st.write('''[Search Filters](#search-filters) - Here you select the values for the filters 
-         that are applied. When starting the Thursday Filmday app, default settings are 
-         already set. In genreal, the filters explain themselves. If you select one or 
-         more genres, you can first select a main genre and then select additional genres 
-         if you like. If you don\'t care about the genre of a movie, you can select the 
-         option **\'No preference for any genre...\'** (default) in the \'Main genre\' 
-         selection field. This option won\'t filter films by genre. If you do want to 
-         select a genre, but you don\'t care what the main genre of a movie is, choose 
-         **\'No preference for a main genre...\'** in the \'Main genre\' selection field. 
-         This will allow you to filter genres without considering the main genre of a 
-         film. Becareful with the votes setting. It is easy to exclude good movies with 
-         settings that might seem low. If you\'d like to watch a blockbuster movie, it is 
-         recomended to set a high filter on votes (min. 200000)''')
+st.write("""[Search Filters](#search-filters) - When starting the Thursday Filmday app, 
+         default filter settings are applied. You can select a main genre and additional 
+         genres, or choose **'No preference for any genre...'** to avoid filtering by 
+         genre. If you want to filter genres but don't care about the main genre, select 
+         **'No preference for a main genre...'**. Be cautious with the votes setting; low 
+         settings might exclude good movies. For blockbusters, set a high filter on votes 
+         (minimum 200,000).""")
 
-st.write(' After you\'re done, quickly check your choices (see [Applied Filters](#applied-filters)). A table with options that are within your requirements will automatically update (see [Possible Movies](#possible-movies)). You can easily visit the IMDb film pages with [Visit IMDb Page](#visit-imdb-page). Good luck chosing your movie!!!')
+st.write('''[Applied Filters](#applied-filters) - Get a short overview of the filter 
+         settings.''')
+
+st.write('''[Possible Movies](#possible-movies) - In this list, you'll find all films 
+         that match the filter settings you choose. This list will automatically update if 
+         you decide to change the filter settings. You'll also see how many films were 
+         found and get notified with a warning if you didn't select a genre.''')
+
+st.write('''[Visit IMDb Page](#visit-imdb-page) - With this function, you can easily visit 
+         the IMDb film pages of movies that are in the Possible Movies list. Here, you 
+         select a subset of films based on a movie's feature that you choose.''')
+
+st.markdown("""
+    <style>
+    @keyframes rainbow {
+        0% {color: red;}
+        14% {color: orange;}
+        28% {color: yellow;}
+        42% {color: green;}
+        57% {color: blue;}
+        71% {color: indigo;}
+        85% {color: violet;}
+        100% {color: red;}
+    }
+    .rainbow-text {
+        animation: rainbow 5s infinite;
+        font-weight: bold;
+    }
+    </style>
+    <p class="rainbow-text">Good luck chosing your movie!!!</p>
+    """, unsafe_allow_html=True)
 
 # Check data set version
 if IMDb_df_version.month == datetime.now().month:
     IMDb_df_version = IMDb_df_version.strftime('%B %d, %Y')
     #st.write()
     text = f'*IMDb data version: **{IMDb_df_version}***'
-    st.markdown(f'<span style="font-size: 13px;">*IMDb data version: **{IMDb_df_version}***</span>', 
+    st.markdown(f'''<span style="font-size: 13px;">*IMDb data version: 
+                **{IMDb_df_version}***</span>''', 
                 unsafe_allow_html=True)
 else:
     IMDb_df_version = IMDb_df_version.strftime('%B %d, %Y')
-    st.markdown(f'<span style="font-size: 13px;">:red[***Notice!** Still using IMDb data version **{IMDb_df_version}**!*]</span>', 
+    st.markdown(f'''<span style="font-size: 13px;">:red[***Notice!** Still using IMDb 
+                data version **{IMDb_df_version}**!*]</span>''', 
                 unsafe_allow_html=True)
 
 # ===============================
@@ -138,15 +176,11 @@ else:
 
 st.subheader('Search Filters', divider='violet')
 
-st.write('(the blockbusters have at least 200,000 votes)')
-
 # ===============================
 # region Genre selection
 # ===============================
 
 st.write('**Genre:**')
-
-st.write('Select the genres that you would like to watch.')
 
 # ===============================
 # region AND/OR jack in the box
@@ -155,10 +189,12 @@ st.write('Select the genres that you would like to watch.')
 def AND_OR():
     if st.checkbox('AND/OR operator'):
         operator = 1
-        st.write('**OR** operator is selected to pass your genres. Notice that this could give :red[**less precise**], but :red[**more movie options**]!')
+        st.write('''**OR** operator is selected to pass your genres. Notice that this 
+                 could give :red[**less precise**], but :red[**more movie options**]!''')
     else:
         operator = 0
-        st.write('**AND** operator is selected to pass your genres. Notice that this could give :red[**more precise**], but :red[**fewer movie options**]!')
+        st.write('''**AND** operator is selected to pass your genres. Notice that this 
+                 could give :red[**more precise**], but :red[**fewer movie options**]!''')
     return operator
 
 # endregion
@@ -502,7 +538,12 @@ if main_genre in ['No preference for any genre...',
 
 st.subheader('Visit IMDb Page', divider='violet')
 
-st.write('Here, you can select a Top Tier List of films and directly visit their IMDb film page! Start by selecting how large you want this list to be (**Top Tier List**). Then, select a movie feature on which you would like to base the top list (**Select a movie feature**). By default, the movies with the best IMDb ratings are placed at the top. You can also turn the sorting around by ticking the **Descending or ascending** checkbox. Now, you can select a film from the Top Tier List (**Select film**). If you click the button **Visit IMDb film page!**, you\'ll be redirected to the IMDb film page of the selected film! There you can find aditional information and trailers.')
+st.write('''Select a Top Tier List of films and visit their IMDb pages! Start by choosing 
+         the list size (**Top Tier List**). Then, select a movie feature (**Select a movie 
+         feature**). By default, movies with the best IMDb ratings are at the top. You 
+         can reverse the order by ticking the **Descending or ascending** checkbox. Select 
+         a film from the Top Tier List (**Select film**) and click **Visit IMDb film 
+         page!** to go to the IMDb page for more information and trailers.''')
 
 # ===============================
 # region If-statement show Visit IMDb Page
@@ -690,13 +731,19 @@ st.markdown("""
     .footer {
              width: 100%;
              text-align: center;
-             padding: 10px 0;
+             align-items: center;
+             padding: 5px 10px 5px 10px;
              margin-top: 20px;
+             margin-bottom: 0px;
              font-size: 14px;
          }
     </style>
      <div class="footer">
-         <p>The Thursday Filmday web page was made possible by <a href="https://eelslap.com/" target="_blank">ADHD hyperfocus</a>, <a href="https://streamlit.io/" target="_blank">Streamlit</a> and <a href="https://developer.imdb.com/" target="_blank">IMDb Developer</a>
+         <p>The Thursday Filmday app was made possible by Midas, the man who hesitated 
+            for so long about which movie to watch that he developed a movie app in the 
+            meantime - <a href="https://eelslap.com/" target="_blank">ADHD hyperfocus</a> - 
+            <a href="https://streamlit.io/" target="_blank">Streamlit</a> and 
+            <a href="https://developer.imdb.com/" target="_blank">IMDb Developer</a>
      </div>
     """, unsafe_allow_html=True)
 
