@@ -7,7 +7,7 @@ import pandas as pd
 import time
 from datetime import datetime
 import gzip
-import toml
+import os
 
 # endregion
 
@@ -818,14 +818,14 @@ movie_night_info, filtered_info = movie_night_info_display(movie_night_info_filt
 # region Film data layout
 # ===============================
 
-# Function to highlight rows where Feature1 is 1
+# Function to highlight rows where watched is 1
 def highlight_rows(row):
-    return ['background-color: palegreen' if row.watched == 1 else '' for _ in row]
+    return ['background-color: rgba(152, 251, 152, 0.3)' if row.watched == 1 else '' for _ in row]
 
-# Apply the function to the dataframe
+# Apply highlight_rows(row) to dataframe
 styled_df = movie_night_info.style.apply(highlight_rows, axis=1)
 
-# Preserve integer formatting for Feature1 and one decimal place for Feature2
+# Preserve integer formatting 
 styled_df = styled_df.format({
     'watched': '{:.0f}',
     'canceled': '{:.0f}',
@@ -833,10 +833,16 @@ styled_df = styled_df.format({
     'Year': '{:.0f}',
     'Duration': '{:.0f}',
     'IMDb Rating': '{:.1f}',
-    'Number of IMDb votes': '{:.0f}'
+    'Number of IMDb votes': '{:,.0f}'
 })
 
 columns_to_display = list(movie_night_info.columns[3:])
+
+# endregion
+
+# ===============================
+# region Display selected archieve
+# ===============================
 
 # Display the styled dataframe in Streamlit
 if sum(movie_night_info['canceled']) >= 1:
@@ -849,6 +855,8 @@ else:
     st.dataframe(styled_df, 
                 column_order=columns_to_display, 
                 hide_index=True)
+
+# endregion
 
 # endregion
 
