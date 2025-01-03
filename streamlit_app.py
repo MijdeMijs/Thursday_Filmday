@@ -730,11 +730,29 @@ st.write(
 # ===============================
 st.header("Film Archive", divider="rainbow")
 
-st.write(
-    'This page is still under construction'
-)
+# Check data set version
+if archieve_df_version.month == datetime.now().month:
+    archieve_df_version = archieve_df_version.strftime('%B %d, %Y')
+    text = f'*IMDb data version: **{archieve_df_version}***'
+    st.markdown(f'''<span style="font-size: 13px;">*Archieve version: 
+                **{archieve_df_version}***</span>''', 
+                unsafe_allow_html=True)
+else:
+    archieve_df_version = archieve_df_version.strftime('%B %d, %Y')
+    st.markdown(f'''<span style="font-size: 13px;">:red[***Notice!** Still using archieve 
+                version **{archieve_df_version}**!*]</span>''', 
+                unsafe_allow_html=True)
 
 # endregion
+
+archieve_df['date'] = pd.to_datetime(archieve_df['date'])
+unique_dates = archieve_df['date'].dt.strftime('%d %B %Y').unique()
+sorted_dates = sorted(unique_dates, key=lambda x: pd.to_datetime(x, format='%d %B %Y'))
+
+st.selectbox('Choose a date:', sorted_dates)
+
+
+st.divider()
 
 # ===============================
 # region Footer
