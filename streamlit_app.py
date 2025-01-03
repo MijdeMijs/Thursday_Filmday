@@ -53,6 +53,10 @@ if not st.session_state.modal_shown:
 # region Load data
 # ===============================
 
+# ===============================
+# region IMDb data
+# ===============================
+
 # Define load and cache IMDb data
 @st.cache_data
 def load_data():
@@ -68,6 +72,29 @@ def load_data():
 
 # Load IMDb data
 IMDb_df, IMDb_df_version = load_data()
+
+# endregion
+
+# ===============================
+# region Archieve data
+# ===============================
+
+# Define load and cache archieve data
+@st.cache_data
+def load_data():
+    # Load the CSV file into a pandas DataFrame
+    data = pd.read_csv('archieve.csv', delimiter=',')
+    
+    archieve_df_version = pd.to_datetime(data.iloc[0, 0])
+
+    data = data.iloc[1:].reset_index(drop=True)
+
+    return data, archieve_df_version
+
+# Load archieve data
+archieve_df, archieve_df_version = load_data()
+
+# endregion
 
 # endregion
 
