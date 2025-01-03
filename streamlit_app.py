@@ -89,6 +89,9 @@ def load_data():
 
     data = data.iloc[1:].reset_index(drop=True)
 
+    data['date'] = pd.to_datetime(data['date'], 
+                                  format='%Y-%m-%d %H:%M:%S')
+
     return data, archieve_df_version
 
 # Load archieve data
@@ -743,14 +746,111 @@ else:
                 version **{archieve_df_version}**!*]</span>''', 
                 unsafe_allow_html=True)
 
+# ===============================
+# region Select movie night date
+# ===============================
+
+@st.cache_data
+def get_unique_dates(archieve_df):
+    unique_dates = archieve_df['date'].dt.strftime('%d %B %Y').unique()
+    return unique_dates
+
+dates = get_unique_dates(archieve_df)
+
+movie_night_date = st.selectbox('Choose a date:', dates)
+
 # endregion
 
-archieve_df['date'] = pd.to_datetime(archieve_df['date'])
-unique_dates = archieve_df['date'].dt.strftime('%d %B %Y').unique()
-sorted_dates = sorted(unique_dates, key=lambda x: pd.to_datetime(x, format='%d %B %Y'))
+# ===============================
+# region Define & apply filters
+# ===============================
 
-st.selectbox('Choose a date:', sorted_dates)
+@st.cache_data
+def movie_night_date_filter(archieve_df, movie_night_date):
 
+    movie_night_date_filter = (
+        archieve_df['date'] == movie_night_date
+    )
+
+    return archieve_df[movie_night_date_filter]
+
+movie_night_info_filter = movie_night_date_filter(archieve_df, movie_night_date)
+
+# endregion
+
+# ===============================
+# region Display filtered movies
+# ===============================
+
+@st.cache_data
+def movie_night_info_display(movie_night_info_filter):
+
+    # Feature selection for new df
+    filtered_info = {'ID': movie_night_info_filter['tconst'],
+                     'watched': movie_night_info_filter['watched'],
+                     'canceled': movie_night_info_filter['canceled'],
+                     'Room': movie_night_info_filter['room'],
+                     'Film': movie_night_info_filter['primaryTitle'],
+                     'Votes': movie_night_info_filter['votes'],
+                     'Movie snack': movie_night_info_filter['snack'],
+                     'Year': movie_night_info_filter['startYear'],
+                     'Duration': movie_night_info_filter['runtimeMinutes'],
+                     'Main genre': movie_night_info_filter['main_genre'],
+                     'Additional genres': movie_night_info_filter['other_genres'],
+                     'IMDb Rating': movie_night_info_filter['averageRating'],
+                     'Number of IMDb votes': movie_night_info_filter['numVotes']}
+    
+    # Selected features to Pandas df
+    movie_night_info_df = pd.DataFrame(filtered_info)
+
+    # Hide ID feature for user and re-index
+    return movie_night_info_df, filtered_info
+
+movie_night_info, filtered_info = movie_night_info_display(movie_night_info_filter)
+
+# !!! VERY WEIRD BUG HERE: If 'filtered_info' is not in return and
+# defined, the 'Votes' feature will get the 'Movie snack' string
+# but only if the data is '09 Martch 2023'... !!!  
+
+# endregion
+
+# ===============================
+# region Film data layout
+# ===============================
+
+# Function to highlight rows where Feature1 is 1
+def highlight_rows(row):
+    return ['background-color: palegreen' if row.watched == 1 else '' for _ in row]
+
+# Apply the function to the dataframe
+styled_df = movie_night_info.style.apply(highlight_rows, axis=1)
+
+# Preserve integer formatting for Feature1 and one decimal place for Feature2
+styled_df = styled_df.format({
+    'watched': '{:.0f}',
+    'canceled': '{:.0f}',
+    'Votes': '{:.0f}',
+    'Year': '{:.0f}',
+    'Duration': '{:.0f}',
+    'IMDb Rating': '{:.1f}',
+    'Number of IMDb votes': '{:.0f}'
+})
+
+columns_to_display = list(movie_night_info.columns[3:])
+
+# Display the styled dataframe in Streamlit
+if sum(movie_night_info['canceled']) >= 1:
+    st.error("This movie night was canceled...")
+
+    st.dataframe(styled_df, 
+                column_order=columns_to_display, 
+                hide_index=True)
+else:
+    st.dataframe(styled_df, 
+                column_order=columns_to_display, 
+                hide_index=True)
+
+# endregion
 
 st.divider()
 
