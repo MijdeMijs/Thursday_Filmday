@@ -971,7 +971,7 @@ else:
     # ===============================
 
     def color_alternate_weeks(df):
-        colors = ['background-color: white', 'background-color: rgba(128, 128, 128, 0.2)']  # white and transparent gray
+        colors = ['background-color: rgba(255, 255, 255, 0.25)', 'background-color: rgba(128, 128, 128, 0.2)']  # white and transparent gray
         color_map = []
         current_color = 0
         
