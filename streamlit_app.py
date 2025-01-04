@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 import gzip
 import random
+import matplotlib.pyplot as plt
 
 # endregion
 
@@ -857,8 +858,63 @@ else:
 st.header("Movie Stats", divider="rainbow")
 
 st.write(
-    'This page is still under construction'
+    f':red[This page is still under construction]'
 )
+
+# ===============================
+# region n movie nights
+# ===============================
+
+n_nights = int(archieve_df['watched'].sum())
+n_suggest = archieve_df['primaryTitle'].dropna().count()
+n_suggest_unique = archieve_df['primaryTitle'].nunique()
+n_votes = int(archieve_df['votes'].dropna().sum())
+n_canceled = int(archieve_df.groupby('date')['canceled'].max().sum())
+
+st.write(f'''In total, we've had **{n_nights} movie nights**! For these nights, 
+         **{n_suggest} films** where suggested of which **{n_suggest_unique} films** 
+         where unique films. A total of **{n_votes} votes** where given! Unfortunately,
+         we had to cancel **{n_canceled} movie nights**...''')
+
+# endregion
+
+# ===============================
+# region Votes per Rooom plot
+# ===============================
+
+# Sum the votes per room
+votes_per_room = archieve_df.groupby('room')['votes'].sum()
+
+# Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
+fig, ax = plt.subplots(figsize=(10, 6), facecolor='#B0B0B0')  # Set the figure background color to white
+bars = ax.bar(votes_per_room.index, votes_per_room.values, color=plt.cm.rainbow(np.linspace(0, 1, len(votes_per_room))), edgecolor='black')  # Set the bar colors to rainbow with black borders
+ax.set_ylabel('Total Votes')
+ax.set_title('Total Votes per Room')
+ax.set_xticklabels(votes_per_room.index, rotation=0)
+
+# Set y-axis to show no decimals
+ax.yaxis.get_major_locator().set_params(integer=True)
+
+# Remove x-axis label
+ax.set_xlabel('')
+
+# Add the count on top of the bars
+for bar in bars:
+    yval = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width()/2, yval + 1, int(yval), ha='center', va='bottom')
+
+# Set the y-axis limit to be 5 higher than the highest bar
+ax.set_ylim(0, votes_per_room.max() + 5)
+
+# Set the axis background color to medium grey
+ax.set_facecolor('#B0B0B0')
+
+# Add a black border around the entire image
+fig.patch.set_edgecolor('black')
+fig.patch.set_linewidth(2)
+
+# Display the plot in Streamlit
+st.pyplot(fig)
 
 # endregion
 
@@ -1150,7 +1206,7 @@ else:
     info_to_display = list(styled_df.columns[3:])
 
     st.write(f'''This is the archieve complete film archieve! It includes a stunning
-             **{len(dates)} movie nights!** Elected films are highlighted in green.''')
+             **{n_nights} movie nights**! Elected films are highlighted in green.''')
 
     st.dataframe(styled_df, 
                 column_order=info_to_display, 
