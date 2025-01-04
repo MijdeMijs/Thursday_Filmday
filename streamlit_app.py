@@ -7,6 +7,7 @@ import pandas as pd
 import time
 from datetime import datetime
 import gzip
+import random
 import os
 
 # endregion
@@ -733,6 +734,16 @@ st.write(
 # ===============================
 st.header("Film Archive", divider="rainbow")
 
+st.write('''The Film Archive is a comprehensive hub where you can revisit all the films 
+         we’ve enjoyed together. It lets you see which room suggested each film, track 
+         how many votes each room received, and even check out the movie snack of the 
+         night. You can explore the archive by individual movie nights or view the entire 
+         collection in one go. Each film entry is enriched with additional IMDb 
+         information, providing a quick overview of key details. For added convenience, 
+         there’s a dedicated IMDb film page button, so you can instantly visit the 
+         official page for any movie. It’s the perfect way to relive past movie nights 
+         and discover new favorites!''')
+
 # Check data set version
 if archieve_df_version.month == datetime.now().month:
     archieve_df_version = archieve_df_version.strftime('%B %d, %Y')
@@ -746,117 +757,196 @@ else:
                 version **{archieve_df_version}**!*]</span>''', 
                 unsafe_allow_html=True)
 
-# ===============================
-# region Select movie night date
-# ===============================
-
-@st.cache_data
-def get_unique_dates(archieve_df):
-    unique_dates = archieve_df['date'].dt.strftime('%d %B %Y').unique()
-    return unique_dates
-
-dates = get_unique_dates(archieve_df)
-
-movie_night_date = st.selectbox('Choose a date:', dates)
-
-# endregion
+st.divider()
 
 # ===============================
-# region Define & apply filters
+# region Archieve subset
 # ===============================
 
 @st.cache_data
-def movie_night_date_filter(archieve_df, movie_night_date):
-
-    movie_night_date_filter = (
-        archieve_df['date'] == movie_night_date
-    )
-
-    return archieve_df[movie_night_date_filter]
-
-movie_night_info_filter = movie_night_date_filter(archieve_df, movie_night_date)
-
-# endregion
-
-# ===============================
-# region Display filtered movies
-# ===============================
-
-@st.cache_data
-def movie_night_info_display(movie_night_info_filter):
+def movie_night_info_sub(archieve_df):
 
     # Feature selection for new df
-    filtered_info = {'ID': movie_night_info_filter['tconst'],
-                     'watched': movie_night_info_filter['watched'],
-                     'canceled': movie_night_info_filter['canceled'],
-                     'Room': movie_night_info_filter['room'],
-                     'Film': movie_night_info_filter['primaryTitle'],
-                     'Votes': movie_night_info_filter['votes'],
-                     'Movie snack': movie_night_info_filter['snack'],
-                     'Year': movie_night_info_filter['startYear'],
-                     'Duration': movie_night_info_filter['runtimeMinutes'],
-                     'Main genre': movie_night_info_filter['main_genre'],
-                     'Additional genres': movie_night_info_filter['other_genres'],
-                     'IMDb Rating': movie_night_info_filter['averageRating'],
-                     'Number of IMDb votes': movie_night_info_filter['numVotes']}
+    info_subset = {'Date': archieve_df['date'], 
+                   'ID': archieve_df['tconst'],
+                   'watched': archieve_df['watched'],
+                   'canceled': archieve_df['canceled'],
+                   'Room': archieve_df['room'],
+                   'Film': archieve_df['primaryTitle'],
+                   'Votes': archieve_df['votes'],
+                   'Movie snack': archieve_df['snack'],
+                   'Year': archieve_df['startYear'],
+                   'Duration': archieve_df['runtimeMinutes'],
+                   'Main genre': archieve_df['main_genre'],
+                   'Additional genres': archieve_df['other_genres'],
+                   'IMDb Rating': archieve_df['averageRating'],
+                   'Number of IMDb votes': archieve_df['numVotes']}
     
     # Selected features to Pandas df
-    movie_night_info_df = pd.DataFrame(filtered_info)
+    movie_night_info_df = pd.DataFrame(info_subset)
 
     # Hide ID feature for user and re-index
-    return movie_night_info_df, filtered_info
+    return movie_night_info_df, info_subset
 
-movie_night_info, filtered_info = movie_night_info_display(movie_night_info_filter)
+movie_night_info, info_subset = movie_night_info_sub(archieve_df)
 
 # !!! VERY WEIRD BUG HERE: If 'filtered_info' is not in return and
 # defined, the 'Votes' feature will get the 'Movie snack' string
-# but only if the data is '09 Martch 2023'... !!!  
+# but only if the data is '09 Martch 2023'... !!! 
 
 # endregion
 
 # ===============================
-# region Film data layout
+# region Unique formatted dates
 # ===============================
 
-# Function to highlight rows where watched is 1
-def highlight_rows(row):
-    return ['background-color: rgba(152, 251, 152, 0.3)' if row.watched == 1 else '' for _ in row]
+@st.cache_data
+def get_unique_dates(movie_night_info):
+    unique_dates = movie_night_info['Date'].dt.strftime('%d %B %Y').unique()
+    return unique_dates
 
-# Apply highlight_rows(row) to dataframe
-styled_df = movie_night_info.style.apply(highlight_rows, axis=1)
-
-# Preserve integer formatting 
-styled_df = styled_df.format({
-    'watched': '{:.0f}',
-    'canceled': '{:.0f}',
-    'Votes': '{:.0f}',
-    'Year': '{:.0f}',
-    'Duration': '{:.0f}',
-    'IMDb Rating': '{:.1f}',
-    'Number of IMDb votes': '{:,.0f}'
-})
-
-columns_to_display = list(movie_night_info.columns[3:])
+dates = get_unique_dates(movie_night_info)
 
 # endregion
 
 # ===============================
-# region Display selected archieve
+# region Random emoji
 # ===============================
 
-# Display the styled dataframe in Streamlit
-if sum(movie_night_info['canceled']) >= 1:
-    st.error("This movie night was canceled...")
+positive_emojis = [
+    ':smile:', ':grinning:', ':grin:', ':laughing:', ':blush:', ':innocent:',
+    ':slightly_smiling_face:', ':hugs:', ':partying_face:', ':heart_eyes:',
+    ':star-struck:', ':kissing_heart:', ':yum:', ':sunglasses:',
+    ':smiling_face_with_3_hearts:', ':smile_cat:', ':smiley_cat:',
+    ':joy_cat:', ':heart_eyes_cat:'
+]
 
-    st.dataframe(styled_df, 
-                column_order=columns_to_display, 
-                hide_index=True)
+# Select a positive random emoji
+positive_random_emoji = random.choice(positive_emojis)
+
+negative_emojis = [
+    ':white_frowning_face:', ':worried:', ':cry:', ':sob:', ':angry:', ':rage:',
+    ':disappointed:', ':pensive:', ':confused:', ':persevere:',
+    ':disappointed_relieved:', ':weary:', ':tired_face:', ':fearful:',
+    ':cold_sweat:', ':scream:', ':astonished:', ':flushed:', ':dizzy_face:',
+    ':face_with_symbols_on_mouth:'
+]
+
+# Select a negative random emoji
+negative_random_emoji = random.choice(negative_emojis)
+
+# endregion
+
+# ===============================
+# region Archieve checkbox
+# ===============================
+
+if st.checkbox('View entire archieve'):
+    complete_archieve = 1
 else:
-    st.dataframe(styled_df, 
-                column_order=columns_to_display, 
-                hide_index=True)
+    complete_archieve = 0
 
 # endregion
+
+# ===============================
+# region Complete or single
+# ===============================
+if complete_archieve == 0:
+    # ===============================
+    # region Single
+    # ===============================
+
+    # ===============================
+    # region Define & apply filters
+    # ===============================
+
+    st.write('Choose a movie night date. The elected film is highlited in green.')
+
+    movie_night_date = st.selectbox('Movie night date:', dates)
+
+    @st.cache_data
+    def movie_night_date_filter(movie_night_info, movie_night_date):
+
+        movie_night_date_filter = (
+            movie_night_info['Date'] == movie_night_date
+        )
+
+        return movie_night_info[movie_night_date_filter]
+
+    single_movie_night_info = movie_night_date_filter(movie_night_info, movie_night_date)
+
+    # endregion
+
+    # ===============================
+    # region Film data layout
+    # ===============================
+
+    # Function to highlight rows where watched is 1
+    def highlight_rows(row):
+        return ['background-color: rgba(152, 251, 152, 0.3)' if row.watched == 1 
+                else '' for _ in row]
+
+    # Apply highlight_rows(row) to dataframe
+    styled_df = single_movie_night_info.style.apply(highlight_rows, axis=1)
+
+    # Preserve integer formatting 
+    styled_df = styled_df.format({
+        'watched': '{:.0f}',
+        'canceled': '{:.0f}',
+        'Votes': '{:.0f}',
+        'Year': '{:.0f}',
+        'Duration': '{:.0f}',
+        'IMDb Rating': '{:.1f}',
+        'Number of IMDb votes': '{:,.0f}'
+    })
+
+    info_to_display = (list(single_movie_night_info.columns[4:7]) + 
+                        list(single_movie_night_info.columns[8:]))
+
+    # endregion
+
+    # ===============================
+    # region Movie snack
+    # ===============================
+
+    if single_movie_night_info['Movie snack'].isnull().all():
+        st.write(f'''During this movie night, there was **no movie snack**
+                {negative_random_emoji}''')
+    else:
+        if (single_movie_night_info['Date'] == datetime(2024, 5, 30)).any():
+            movie_snack = single_movie_night_info['Movie snack'].dropna().iloc[0]
+            st.write(f'''The movie snack of this movie night was: 
+                    **{movie_snack}** :couplekiss:''')
+        else:
+            movie_snack = single_movie_night_info['Movie snack'].dropna().iloc[0]
+            st.write(f'''The movie snack of this movie night was: 
+                    **{movie_snack}** {positive_random_emoji}''')
+
+    # endregion
+
+    # ===============================
+    # region Display selected archieve
+    # ===============================
+
+    # Display the styled dataframe in Streamlit
+    if sum(single_movie_night_info['canceled']) >= 1:
+        st.error("This movie night was canceled...")
+
+        st.dataframe(styled_df, 
+                    column_order=info_to_display, 
+                    hide_index=True)
+    else:
+        st.dataframe(styled_df, 
+                    column_order=info_to_display, 
+                    hide_index=True)
+
+    # endregion
+
+    # endregion
+
+    # endregion
+else:
+    st.dataframe(movie_night_info)
 
 # endregion
 
