@@ -8,7 +8,6 @@ import time
 from datetime import datetime
 import gzip
 import random
-import os
 
 # endregion
 
@@ -767,10 +766,10 @@ st.divider()
 def movie_night_info_sub(archieve_df):
 
     # Feature selection for new df
-    info_subset = {'Date': archieve_df['date'], 
-                   'ID': archieve_df['tconst'],
+    info_subset = {'ID': archieve_df['tconst'],
                    'watched': archieve_df['watched'],
                    'canceled': archieve_df['canceled'],
+                   'Date': archieve_df['date'],
                    'Room': archieve_df['room'],
                    'Film': archieve_df['primaryTitle'],
                    'Votes': archieve_df['votes'],
@@ -852,6 +851,7 @@ else:
 # region Complete or single
 # ===============================
 if complete_archieve == 0:
+
     # ===============================
     # region Single
     # ===============================
@@ -946,7 +946,76 @@ if complete_archieve == 0:
 
     # endregion
 else:
-    st.dataframe(movie_night_info)
+
+    # ===============================
+    # region Complete
+    # ===============================
+
+    # ===============================
+    # region Format date
+    # ===============================
+
+    movie_night_info['Date'] = pd.to_datetime(movie_night_info['Date'])
+
+    # Function to format the date
+    def format_date(date):
+        return date.strftime('%d %b %Y')
+
+    # Apply the function to the 'Date' column and replace the original column
+    movie_night_info['Date'] = movie_night_info['Date'].apply(format_date)
+
+    # endregion
+
+    # ===============================
+    # region Format grey color
+    # ===============================
+
+    def color_alternate_weeks(df):
+        colors = ['background-color: white', 'background-color: rgba(128, 128, 128, 0.2)']  # white and transparent gray
+        color_map = []
+        current_color = 0
+        
+        for i in range(len(df)):
+            if i == 0 or (pd.to_datetime(df['Date'].iloc[i]).isocalendar()[1] != pd.to_datetime(df['Date'].iloc[i - 1]).isocalendar()[1]):
+                current_color = 1 - current_color
+            color_map.append([colors[current_color]] * len(df.columns))
+        
+        return pd.DataFrame(color_map, index=df.index, columns=df.columns)
+
+    styled_df = movie_night_info.style.apply(color_alternate_weeks, axis=None)
+
+    # endregion
+
+    # ===============================
+    # region Format values
+    # ===============================
+
+    # Preserve integer formatting 
+    styled_df = styled_df.format({
+        'watched': '{:.0f}',
+        'canceled': '{:.0f}',
+        'Votes': '{:.0f}',
+        'Year': '{:.0f}',
+        'Duration': '{:.0f}',
+        'IMDb Rating': '{:.1f}',
+        'Number of IMDb votes': '{:,.0f}'
+    })
+
+    # endregion
+
+    # ===============================
+    # region Select display
+    # ===============================
+
+    info_to_display = list(styled_df.columns[3:])
+
+    st.dataframe(styled_df, 
+                column_order=info_to_display, 
+                hide_index=True)
+
+    # endregion
+
+    # endregion
 
 # endregion
 
