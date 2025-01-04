@@ -12,6 +12,90 @@ import random
 # endregion
 
 # ===============================
+# region Bug CSS injection & initialize
+# ===============================
+
+# Generate random positions within the specified range
+def generate_random_positions(num_points=50):
+    positions = []
+    for _ in range(num_points):
+        top = random.randint(12, 95)  # Random top position (12% to 95%)
+        left = random.randint(10, 95)  # Random left position (10% to 95%)
+        positions.append((top, left))
+        # Ensure the last position matches the first
+    positions.append(positions[0])
+    return positions
+
+# Generate random keyframe positions
+random_positions = generate_random_positions()
+
+# Build the keyframes CSS dynamically
+keyframes = "@keyframes move {"
+step = 0
+for top, left in random_positions:
+    keyframes += f"{step}% {{ top: {top}%; left: {left}%; }}"
+    step += int(100 / (len(random_positions) - 1))  # Evenly distribute steps
+keyframes += "}"
+
+# Inject CSS for the bug animation
+st.markdown(
+    f"""
+    <style>
+    body {{
+        overflow: hidden; /* Prevent scrollbars if the bug moves beyond visible areas */
+    }}
+
+    .bug {{
+        font-size: 20px; /* Perfect bug size */
+        position: fixed; /* Fixed positioning allows movement across the entire screen */
+        z-index: 1000; /* Ensure it floats above all Streamlit components */
+        animation: move 300s linear infinite; /* Smooth and infinite roaming */
+        pointer-events: none; /* Allow interaction with elements underneath */
+    }}
+
+    {keyframes}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Initialize session state to track whether the bug should be shown
+if "show_bug" not in st.session_state:
+    st.session_state.show_bug = False
+
+# endregion
+
+# ===============================
+# region Bug pop-up initialize
+# ===============================
+
+# Initialize session state for Bug the Caterpillar visibility
+if 'show_popup' not in st.session_state:
+    st.session_state.show_popup = False
+
+# Function to display the Bug the Caterpillar pop-up
+@st.dialog("Bug the Caterpillar")
+def show_popup():
+    st.write("Oh no! Bug the Caterpillar spawned! :bug:")
+
+# endregion
+
+# ===============================
+# region Bug the Caterpillar random
+# ===============================
+
+# Function to randomly set show_popup to True
+def random_bug():
+    if random.random() < 0.005:  # 0.5% chance to spawn Bug the Caterpillar
+        st.session_state.show_bug = True
+        st.session_state.show_popup = True
+
+# Call the function to potentially show the popup
+random_bug()
+    
+# endregion
+
+# ===============================
 # region Cookie pop-up
 # ===============================
 
@@ -113,6 +197,10 @@ if "rerun" not in st.session_state:
 # region Home page
 # ===============================
 
+# ===============================
+# region Intro
+# ===============================
+
 # Title
 st.title("Thursday Filmday :clapper::film_projector:")
 
@@ -132,6 +220,32 @@ st.write("""
 
     Enjoy your movie night and happy watching! :popcorn:
     """)
+
+# endregion
+
+# ===============================
+# region Spawn bug
+# ===============================
+
+# Button to toggle the bug visibility
+if st.button(':no_entry_sign: DON\'T PRESS!!!'):
+    st.session_state.show_bug = True
+    st.session_state.show_popup = True
+
+# Display the bug if the button is clicked
+if st.session_state.show_bug:
+    st.markdown(
+        """
+        <div class="bug">🐛</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# Display the popup if the flag is set
+if st.session_state.show_popup:
+    show_popup()
+
+# endregion
 
 # endregion
 
