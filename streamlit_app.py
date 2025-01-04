@@ -544,7 +544,14 @@ elif display_df.empty:
     display_df = st.error('No movies found within the boundaries of the chosen filters!')
 else:
     st.write(f'Found **{len(display_df)}** films within your chosen filters:')
-    st.write(display_df.iloc[:, 1:].reset_index(drop=True))
+    
+    # Reset the index and add 1 to start from 1
+    display_df = display_df.iloc[:, 1:].reset_index(drop=True)
+    display_df.index = display_df.index + 1
+    display_df.index.name = 'Index'
+    
+    # Display the DataFrame
+    st.write(display_df)
 
 # endregion
 
@@ -633,10 +640,12 @@ else:
     # region Left layout column
     # ===============================
 
+    # st.write(display_df)
+
     with left_column:
 
         # Select on column display_df is sorted
-        sort_column = st.selectbox("Select a movie feature:", display_df.columns[[6, 2, 3, 7]])
+        sort_column = st.selectbox("Select a movie feature:", display_df.columns[[5, 1, 2, 6]])
         # Descending or ascending
         if st.checkbox('Descending or ascending'):
             ascent = True
@@ -700,9 +709,13 @@ else:
 
     # endregion
 
-# endregion
+    # endregion
 
     st.divider()
+
+    # ===============================
+    # region Display top and reindex
+    # ===============================
 
     if ascent == True:
         ascent_descent = 'ascending'
@@ -711,7 +724,14 @@ else:
 
     st.write(f'Top **{top_n} / {len(display_df)}** based on **{ascent_descent} {sort_column}**:')
 
-    st.write(top_list.iloc[:, 1:])
+    # Reset the index and add 1 to start from 1
+    top_list = top_list.reset_index(drop=True)
+    top_list.index = top_list.index + 1
+    top_list.index.name = 'Top'
+
+    st.write(top_list)
+
+    # endregion
 
 # endregion
 
@@ -943,8 +963,6 @@ if complete_archieve == 0:
     # endregion
 
     # endregion
-
-    # endregion
 else:
 
     # ===============================
@@ -971,14 +989,22 @@ else:
     # ===============================
 
     def color_alternate_weeks(df):
-        colors = ['background-color: rgba(255, 255, 255, 0.25)', 'background-color: rgba(128, 128, 128, 0.2)']  # white and transparent gray
+        colors = ['background-color: rgba(255, 255, 255, 0.25)', 
+                  'background-color: rgba(128, 128, 128, 0.2)']
         color_map = []
         current_color = 0
         
         for i in range(len(df)):
+            # Determine alternating week color
             if i == 0 or (pd.to_datetime(df['Date'].iloc[i]).isocalendar()[1] != pd.to_datetime(df['Date'].iloc[i - 1]).isocalendar()[1]):
                 current_color = 1 - current_color
-            color_map.append([colors[current_color]] * len(df.columns))
+            row_color = [colors[current_color]] * len(df.columns)
+
+            # Check if 'watched' == 1 and override color for the row
+            if df['watched'].iloc[i] == 1:
+                row_color = ['background-color: rgba(152, 251, 152, 0.3)'] * len(df.columns)
+            
+            color_map.append(row_color)
         
         return pd.DataFrame(color_map, index=df.index, columns=df.columns)
 
@@ -1009,6 +1035,9 @@ else:
 
     info_to_display = list(styled_df.columns[3:])
 
+    st.write(f'''This is the archieve complete film archieve! It includes a stunning
+             **{len(dates)} movie nights!** Elected films are highlighted in green.''')
+
     st.dataframe(styled_df, 
                 column_order=info_to_display, 
                 hide_index=True)
@@ -1019,7 +1048,73 @@ else:
 
 # endregion
 
+# ===============================
+# region Left & right layout column
+# ===============================
+
+left_column, right_column = st.columns(2)
+
+# ===============================
+# region Left column
+# ===============================
+
+with left_column:
+
+    # Select a movie
+    if complete_archieve == 0:
+        archieve_selection = single_movie_night_info['Film'].dropna().unique()
+    else:
+        archieve_selection = movie_night_info['Film'].dropna().unique()
+
+    selected_archieve_film = st.selectbox("Select film:", archieve_selection)
+
+    # Get film ID from archieve
+    if complete_archieve == 0:
+        archieve_ID = single_movie_night_info[single_movie_night_info['Film'] == selected_archieve_film].iloc[0, 0]
+    else:
+        archieve_ID = movie_night_info[movie_night_info['Film'] == selected_archieve_film].iloc[0, 0]
+
+    # Define IMDb URL
+    url_from_archieve = f'https://www.imdb.com/title/{archieve_ID}/'
+
+    # Link button with spinner
+    archieve_col1, archieve_col2 = st.columns([2, 2])
+
+    # Link button in first column
+    with archieve_col1:
+        st.link_button("Visit IMDb film page!", url_from_archieve)
+
+        # Spinner in second column
+    with archieve_col2:
+        with st.spinner('Loading link...'):
+                
+            # Load 1 second                
+            time.sleep(1)
+
+        # CSS to align spinner
+        st.markdown(
+        """
+        <style>
+        .stButton button {
+            margin-right: 10px;
+        }
+        .stSpinner {
+            display: inline-block;
+            vertical-align: middle;
+            margin-top: 7px;                
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+        )
+    
+# endregion
+
+# endregion    
+
 st.divider()
+
+# endregion
 
 # ===============================
 # region Footer
@@ -1054,8 +1149,10 @@ st.markdown("""
          <p>The Thursday Filmday app was made possible by Midas, the man who hesitated 
             for so long about which movie to watch that he developed a movie app in the 
             meantime - <a href="https://eelslap.com/" target="_blank">ADHD hyperfocus</a> - 
-            <a href="https://streamlit.io/" target="_blank">Streamlit</a> and 
-            <a href="https://developer.imdb.com/" target="_blank">IMDb Developer</a>
+            <a href="https://streamlit.io/" target="_blank">Streamlit</a> - 
+            <a href="https://developer.imdb.com/" target="_blank">IMDb Developer</a> and
+            a lot of <a href="https://chatgpt.com/" target="_blank">ChatGPT-4</a>
+         <p>&#128027; If you find any bugs, please report! &#128027;<p> 
      </div>
     """, unsafe_allow_html=True)
 
