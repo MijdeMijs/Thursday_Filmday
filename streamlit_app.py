@@ -17,7 +17,8 @@ import matplotlib.pyplot as plt
 # ===============================
 
 # Generate random positions within the specified range
-def generate_random_positions(num_points=50):
+@st.cache_data
+def generate_random_positions(num_points=100):
     positions = []
     for _ in range(num_points):
         top = random.randint(12, 95)  # Random top position (12% to 95%)
@@ -31,12 +32,17 @@ def generate_random_positions(num_points=50):
 random_positions = generate_random_positions()
 
 # Build the keyframes CSS dynamically
-keyframes = "@keyframes move {"
-step = 0
-for top, left in random_positions:
-    keyframes += f"{step}% {{ top: {top}%; left: {left}%; }}"
-    step += int(100 / (len(random_positions) - 1))  # Evenly distribute steps
-keyframes += "}"
+@st.cache_data
+def keyframes_CSS_imput():
+    keyframes = "@keyframes move {"
+    step = 0
+    for top, left in random_positions:
+        keyframes += f"{step}% {{ top: {top}%; left: {left}%; }}"
+        step += int(100 / (len(random_positions) - 1))  # Evenly distribute steps
+    keyframes += "}"
+    return keyframes
+
+keyframes = keyframes_CSS_imput()
 
 # Inject CSS for the bug animation
 st.markdown(
@@ -47,7 +53,7 @@ st.markdown(
     }}
 
     .bug {{
-        font-size: 20px; /* Perfect bug size */
+        font-size: 25px; /* Perfect bug size */
         position: fixed; /* Fixed positioning allows movement across the entire screen */
         z-index: 1000; /* Ensure it floats above all Streamlit components */
         animation: move 300s linear infinite; /* Smooth and infinite roaming */
@@ -78,6 +84,7 @@ if 'show_popup' not in st.session_state:
 @st.dialog("Bug the Caterpillar")
 def show_popup():
     st.write("Oh no! Bug the Caterpillar spawned! :bug:")
+    st.session_state.show_popup = True
 
 # endregion
 
@@ -231,7 +238,8 @@ st.write("""
 # Button to toggle the bug visibility
 if st.button(':no_entry_sign: DON\'T PRESS!!!'):
     st.session_state.show_bug = True
-    st.session_state.show_popup = True
+    if not st.session_state.show_popup:
+            show_popup()
 
 # Display the bug if the button is clicked
 if st.session_state.show_bug:
@@ -241,10 +249,6 @@ if st.session_state.show_bug:
         """,
         unsafe_allow_html=True,
     )
-
-# Display the popup if the flag is set
-if st.session_state.show_popup:
-    show_popup()
 
 # endregion
 
@@ -634,13 +638,13 @@ def display_filtered_df(filtered_df):
 
     # Feature selection for new df
     filtered_data = {'ID': filtered_df['tconst'],
-                    'Film': filtered_df['primaryTitle'],
-                    'Year': filtered_df['startYear'],
-                    'Duration': filtered_df['runtimeMinutes'],
-                    'Main genre': filtered_df['main_genre'],
-                    'Additional genres': filtered_df['other_genres'],
-                    'IMDb Rating': filtered_df['averageRating'],
-                    'Number of votes': filtered_df['numVotes']}
+                     'Film': filtered_df['primaryTitle'],
+                     'Year': filtered_df['startYear'],
+                     'Duration': filtered_df['runtimeMinutes'],
+                     'Main genre': filtered_df['main_genre'],
+                     'Additional genres': filtered_df['other_genres'],
+                     'IMDb Rating': filtered_df['averageRating'],
+                     'Number of votes': filtered_df['numVotes']}
     
     # Selected features to Pandas df
     display_df = pd.DataFrame(filtered_data)
@@ -661,12 +665,12 @@ else:
     st.write(f'Found **{len(display_df)}** films within your chosen filters:')
     
     # Reset the index and add 1 to start from 1
-    display_df = display_df.iloc[:, 1:].reset_index(drop=True)
+    display_df = display_df.reset_index(drop=True)
     display_df.index = display_df.index + 1
     display_df.index.name = 'Index'
     
     # Display the DataFrame
-    st.write(display_df)
+    st.write(display_df.iloc[:, 1:])
 
 # endregion
 
@@ -760,7 +764,7 @@ else:
     with left_column:
 
         # Select on column display_df is sorted
-        sort_column = st.selectbox("Select a movie feature:", display_df.columns[[5, 1, 2, 6]])
+        sort_column = st.selectbox("Select a movie feature:", display_df.columns[[6, 2, 3, 7]])
         # Descending or ascending
         if st.checkbox('Descending or ascending'):
             ascent = True
@@ -844,7 +848,7 @@ else:
     top_list.index = top_list.index + 1
     top_list.index.name = 'Top'
 
-    st.write(top_list)
+    st.write(top_list.iloc[:, 1:])
 
     # endregion
 
