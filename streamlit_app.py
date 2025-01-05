@@ -308,8 +308,6 @@ st.markdown("""
 # Check data set version
 if IMDb_df_version.month == datetime.now().month:
     IMDb_df_version = IMDb_df_version.strftime('%B %d, %Y')
-    #st.write()
-    text = f'*IMDb data version: **{IMDb_df_version}***'
     st.markdown(f'''<span style="font-size: 13px;">*IMDb data version: 
                 **{IMDb_df_version}***</span>''', 
                 unsafe_allow_html=True)
@@ -373,36 +371,32 @@ main_genre = st.selectbox('Main genre:', genres)
 # ===============================
 
 def process_genre_selection(main_genre, genres):
+    genre_options = []
+    other_genres = []
+    genre_selection = []
+    operator = 0
+    genre_tag = 0
+
     if main_genre == "No preference for any genre...":
-        genre_options = []
-        other_genres = []
-        genre_selection = []
-        operator = 0
-        genre_tag = 0
-    elif main_genre == "No preference for a main genre...":
+        pass
+    else:
         genre_options = [
-            genre for genre in genres if genre not in ["No preference for any genre...", 
-                                                       "No preference for a main genre..."]
+            genre for genre in genres if genre not in ["No preference for any genre...", "No preference for a main genre..."]
         ]
+        if main_genre != "No preference for a main genre...":
+            genre_options = [genre for genre in genre_options if genre != main_genre]
+            max_genres = 2
+            genre_tag = 2
+        else:
+            max_genres = 3
+            genre_tag = 1
+
         other_genres = st.multiselect(
-            "Select a maximum of **three** genre(s):",
+            f"Select a maximum of **{max_genres}** genre(s):",
             options=genre_options
         )
         genre_selection = other_genres.copy()
         operator = AND_OR()
-        genre_tag = 1
-    else:
-        genre_options = [
-            genre for genre in genres if genre != main_genre and genre not in ["No preference for any genre...", 
-                                                                               "No preference for a main genre..."]
-        ]
-        other_genres = st.multiselect(
-            "Select a maximum of **two** additional genre(s):",
-            options = genre_options    
-        )
-        genre_selection = other_genres.copy()
-        operator = AND_OR()
-        genre_tag = 2
 
     return genre_options, other_genres, genre_selection, operator, genre_tag
 
@@ -429,30 +423,44 @@ st.divider()
 # region Simple filter parameters
 # ===============================
 
-# year
-min_year = int(IMDb_df['startYear'].min())
-max_year = datetime.now().year
-default_min_year = 1970
-default_max_year = max_year
+# Function to calculate the required values and cache the result
+@st.cache_data
+def calculate_values(df):
+    # year
+    min_year = int(df['startYear'].min())
+    max_year = datetime.now().year
+    default_min_year = 1970
+    default_max_year = max_year
 
-# time 
-min_time = 30
-max_time = 240
-default_min_time = 60
-default_max_time = 120
+    # time 
+    min_time = 30
+    max_time = 240
+    default_min_time = 60
+    default_max_time = 120
 
-# ratings
-min_rating = float(1)
-max_rating = float(10)
-default_min_rating = float(6)
-default_max_rating = max_rating
-ratings_step_size = 0.5
+    # ratings
+    min_rating = float(1)
+    max_rating = float(10)
+    default_min_rating = float(6)
+    default_max_rating = max_rating
+    ratings_step_size = 0.5
 
-# votes
-min_votes = 0
-max_votes = 500000
-default_min_votes = 100000
-votes_step_size = 1000
+    # votes
+    min_votes = 0
+    max_votes = 500000
+    default_min_votes = 100000
+    votes_step_size = 1000
+
+    return (min_year, max_year, default_min_year, default_max_year,
+            min_time, max_time, default_min_time, default_max_time,
+            min_rating, max_rating, default_min_rating, default_max_rating,
+            ratings_step_size, min_votes, max_votes, default_min_votes, votes_step_size)
+
+# Call the function and cache the result
+(min_year, max_year, default_min_year, default_max_year,
+ min_time, max_time, default_min_time, default_max_time,
+ min_rating, max_rating, default_min_rating, default_max_rating,
+ ratings_step_size, min_votes, max_votes, default_min_votes, votes_step_size) = calculate_values(IMDb_df)
 
 # endregion
 
@@ -541,30 +549,21 @@ with right_column:
         # Initialize the string variable
         s = ''
 
-        # Genres
+        # Check for genre selection errors
         if (genre_tag == 1 and len(genre_selection) > 3) or (genre_tag == 2 and len(genre_selection) > 2):
-            st.error("More that 3 genres are selected!")
-        elif genre_tag == 1:
-            for i in genre_selection:
-               s += "- " + i + "\n"            
-            if s:
-                st.markdown(s)
+            st.error("More than 3 genres are selected!")
+        else:
+            if genre_tag == 1:
+                s = "\n".join([f"- {genre}" for genre in genre_selection])
+                st.markdown(s if s else 'No genres selected...')
+            elif genre_tag == 2:
+                st.write(f'Main genre: **{main_genre}**')
+                filtered_genre_selection = [genre for genre in genre_selection if genre != main_genre]
+                s = "\n".join([f"- {genre}" for genre in filtered_genre_selection])
+                st.write('Additional genre(s):')
+                st.markdown(s if s else 'No additional genres selected...')
             else:
                 st.write('No genres selected...')
-        elif genre_tag == 2:
-            st.write(f'Main genre: **{main_genre}**')
-            filtered_genre_selection = [
-                 genre for genre in genre_selection if genre != main_genre
-            ]
-            st.write('Additional genre(s):')
-            for i in filtered_genre_selection:
-                s += "- " + i + "\n"            
-            if s:
-                st.markdown(s)
-            else:
-                st.write('No additional genres selected...')
-        else:
-            st.write('No genres selected...')
 
 # endregion
 
@@ -603,14 +602,14 @@ def IMDb_filter(IMDb_df,
 
     # Add main genre filter if genre_tag = 2
     if genre_tag == 2:
-        filters = filters & (IMDb_df['main_genre'] == main_genre)
+        filters &= (IMDb_df['main_genre'] == main_genre)
 
     # Apply genre-based filtering if necessary including AND/OR operator
-    if genre_tag != 0 :
+    if genre_tag != 0:
         if operator == 0:  # AND condition
-            genre_filter = (IMDb_df[genre_selection] == 1).all(axis=1)
+            genre_filter = IMDb_df[genre_selection].all(axis=1)
         elif operator == 1:  # OR condition
-            genre_filter = (IMDb_df[genre_selection].sum(axis=1) > 0)
+            genre_filter = IMDb_df[genre_selection].any(axis=1)
         filters &= genre_filter
 
     # Apply filters to IMDb_df
@@ -635,21 +634,18 @@ filtered_df = IMDb_filter(IMDb_df,
 
 @st.cache_data
 def display_filtered_df(filtered_df):
-
-    # Feature selection for new df
-    filtered_data = {'ID': filtered_df['tconst'],
-                     'Film': filtered_df['primaryTitle'],
-                     'Year': filtered_df['startYear'],
-                     'Duration': filtered_df['runtimeMinutes'],
-                     'Main genre': filtered_df['main_genre'],
-                     'Additional genres': filtered_df['other_genres'],
-                     'IMDb Rating': filtered_df['averageRating'],
-                     'Number of votes': filtered_df['numVotes']}
+    # Create the DataFrame with selected features and reset the index
+    display_df = filtered_df[['tconst', 'primaryTitle', 'startYear', 'runtimeMinutes', 
+                              'main_genre', 'other_genres', 'averageRating', 
+                              'numVotes']].copy()
+    display_df.columns = ['ID', 'Film', 'Year', 'Duration', 'Main genre', 
+                          'Additional genres', 'IMDb Rating', 'Number of votes']
     
-    # Selected features to Pandas df
-    display_df = pd.DataFrame(filtered_data)
+    # Reset the index and add 1 to start from 1
+    display_df.reset_index(drop=True, inplace=True)
+    display_df.index = display_df.index + 1
+    display_df.index.name = 'Index'
 
-    # Hide ID feature for user and re-index
     return display_df
 
 # Run display_filtered_df()
@@ -657,19 +653,11 @@ display_df = display_filtered_df(filtered_df)
 
 # Show display_df or error message to user
 if (genre_tag == 1 and len(genre_selection) > 3) or (genre_tag == 2 and len(genre_selection) > 2):
-    # Error message too many genres
     st.error('More than 3 genres are selected!')
 elif display_df.empty:
-    display_df = st.error('No movies found within the boundaries of the chosen filters!')
+    st.error('No movies found within the boundaries of the chosen filters!')
 else:
     st.write(f'Found **{len(display_df)}** films within your chosen filters:')
-    
-    # Reset the index and add 1 to start from 1
-    display_df = display_df.reset_index(drop=True)
-    display_df.index = display_df.index + 1
-    display_df.index.name = 'Index'
-    
-    # Display the DataFrame
     st.write(display_df.iloc[:, 1:])
 
 # endregion
@@ -745,6 +733,10 @@ else:
         top_n_list = display_df.sort_values(by=sort_column, 
                                             ascending=ascent).reset_index(drop=True).head(top_n)
         
+        top_n_list = top_n_list.reset_index(drop=True)
+        top_n_list.index = top_n_list.index + 1
+        top_n_list.index.name = 'Top'
+
         return top_n_list
 
     # endregion
@@ -765,6 +757,7 @@ else:
 
         # Select on column display_df is sorted
         sort_column = st.selectbox("Select a movie feature:", display_df.columns[[6, 2, 3, 7]])
+        
         # Descending or ascending
         if st.checkbox('Descending or ascending'):
             ascent = True
@@ -833,7 +826,7 @@ else:
     st.divider()
 
     # ===============================
-    # region Display top and reindex
+    # region Display top
     # ===============================
 
     if ascent == True:
@@ -842,11 +835,6 @@ else:
         ascent_descent = 'descending'    
 
     st.write(f'Top **{top_n} / {len(display_df)}** based on **{ascent_descent} {sort_column}**:')
-
-    # Reset the index and add 1 to start from 1
-    top_list = top_list.reset_index(drop=True)
-    top_list.index = top_list.index + 1
-    top_list.index.name = 'Top'
 
     st.write(top_list.iloc[:, 1:])
 
@@ -886,39 +874,49 @@ st.write(f'''In total, we've had **{n_nights} movie nights**! For these nights,
 # region Votes per Rooom plot
 # ===============================
 
-# Sum the votes per room
-votes_per_room = archieve_df.groupby('room')['votes'].sum()
+# Function to sum the votes per room and plot the bar chart
+@st.cache_data
+def plot_votes_per_room(df):
+    # Sum the votes per room
+    votes_per_room = df.groupby('room')['votes'].sum()
 
-# Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
-fig, ax = plt.subplots(figsize=(10, 6), facecolor='#B0B0B0')  # Set the figure background color to white
-bars = ax.bar(votes_per_room.index, votes_per_room.values, color=plt.cm.rainbow(np.linspace(0, 1, len(votes_per_room))), edgecolor='black')  # Set the bar colors to rainbow with black borders
-ax.set_ylabel('Total Votes')
-ax.set_title('Total Votes per Room')
-ax.set_xticklabels(votes_per_room.index, rotation=0)
+    # Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor='#B0B0B0')  # Set the figure background color to white
+    bars = ax.bar(votes_per_room.index, votes_per_room.values, color=plt.cm.rainbow(np.linspace(0, 1, len(votes_per_room))), edgecolor='black')  # Set the bar colors to rainbow with black borders
+    ax.set_ylabel('Total Votes')
+    ax.set_title('Total Votes per Room')
+    ax.set_xticklabels(votes_per_room.index, rotation=0)
 
-# Set y-axis to show no decimals
-ax.yaxis.get_major_locator().set_params(integer=True)
+    # Set y-axis to show no decimals
+    ax.yaxis.get_major_locator().set_params(integer=True)
 
-# Remove x-axis label
-ax.set_xlabel('')
+    # Remove x-axis label
+    ax.set_xlabel('')
 
-# Add the count on top of the bars
-for bar in bars:
-    yval = bar.get_height()
-    ax.text(bar.get_x() + bar.get_width()/2, yval + 1, int(yval), ha='center', va='bottom')
+    # Add the count on top of the bars
+    for bar in bars:
+        yval = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2, yval + 1, int(yval), ha='center', va='bottom')
 
-# Set the y-axis limit to be 5 higher than the highest bar
-ax.set_ylim(0, votes_per_room.max() + 5)
+    # Set the y-axis limit to be 5 higher than the highest bar
+    ax.set_ylim(0, votes_per_room.max() + 5)
 
-# Set the axis background color to medium grey
-ax.set_facecolor('#B0B0B0')
+    # Set the axis background color to medium grey
+    ax.set_facecolor('#B0B0B0')
 
-# Add a black border around the entire image
-fig.patch.set_edgecolor('black')
-fig.patch.set_linewidth(2)
+    # Add a black border around the entire image
+    fig.patch.set_edgecolor('black')
+    fig.patch.set_linewidth(2)
+
+    return fig
+
+# Call the function and cache the result
+fig = plot_votes_per_room(archieve_df)
 
 # Display the plot in Streamlit
 st.pyplot(fig)
+
+# endregion
 
 # endregion
 
@@ -1147,9 +1145,19 @@ else:
     # region Format date
     # ===============================
 
-    movie_night_info['Date'] = pd.to_datetime(movie_night_info['Date'])
+    # movie_night_info['Date'] = pd.to_datetime(movie_night_info['Date'])
+
+    # Function to convert the 'Date' column to datetime
+    @st.cache_data
+    def convert_to_datetime(df):
+        df['Date'] = pd.to_datetime(df['Date'])
+        return df
+
+    # Apply the function and cache the result
+    movie_night_info = convert_to_datetime(movie_night_info)
 
     # Function to format the date
+    @st.cache_data
     def format_date(date):
         return date.strftime('%d %b %Y')
 
@@ -1162,6 +1170,7 @@ else:
     # region Format grey color
     # ===============================
 
+    @st.cache_data
     def color_alternate_weeks(df):
         colors = ['background-color: rgba(255, 255, 255, 0.25)', 
                   'background-color: rgba(128, 128, 128, 0.2)']
@@ -1213,8 +1222,8 @@ else:
              **{n_nights} movie nights**! Elected films are highlighted in green.''')
 
     st.dataframe(styled_df, 
-                column_order=info_to_display, 
-                hide_index=True)
+                 column_order=info_to_display, 
+                 hide_index=True)
 
     # endregion
 
