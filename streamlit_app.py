@@ -13,97 +13,6 @@ import matplotlib.pyplot as plt
 # endregion
 
 # ===============================
-# region Bug CSS injection & initialize
-# ===============================
-
-# Generate random positions within the specified range
-@st.cache_data
-def generate_random_positions(num_points=100):
-    positions = []
-    for _ in range(num_points):
-        top = random.randint(12, 95)  # Random top position (12% to 95%)
-        left = random.randint(10, 95)  # Random left position (10% to 95%)
-        positions.append((top, left))
-        # Ensure the last position matches the first
-    positions.append(positions[0])
-    return positions
-
-# Generate random keyframe positions
-random_positions = generate_random_positions()
-
-# Build the keyframes CSS dynamically
-@st.cache_data
-def keyframes_CSS_imput():
-    keyframes = "@keyframes move {"
-    step = 0
-    for top, left in random_positions:
-        keyframes += f"{step}% {{ top: {top}%; left: {left}%; }}"
-        step += int(100 / (len(random_positions) - 1))  # Evenly distribute steps
-    keyframes += "}"
-    return keyframes
-
-keyframes = keyframes_CSS_imput()
-
-# Inject CSS for the bug animation
-st.markdown(
-    f"""
-    <style>
-    body {{
-        overflow: hidden; /* Prevent scrollbars if the bug moves beyond visible areas */
-    }}
-
-    .bug {{
-        font-size: 25px; /* Perfect bug size */
-        position: fixed; /* Fixed positioning allows movement across the entire screen */
-        z-index: 1000; /* Ensure it floats above all Streamlit components */
-        animation: move 300s linear infinite; /* Smooth and infinite roaming */
-        pointer-events: none; /* Allow interaction with elements underneath */
-    }}
-
-    {keyframes}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# Initialize session state to track whether the bug should be shown
-if "show_bug" not in st.session_state:
-    st.session_state.show_bug = False
-
-# endregion
-
-# ===============================
-# region Bug pop-up initialize
-# ===============================
-
-# Initialize session state for Bug the Caterpillar visibility
-if 'show_popup' not in st.session_state:
-    st.session_state.show_popup = False
-
-# Function to display the Bug the Caterpillar pop-up
-@st.dialog("Bug the Caterpillar")
-def show_popup():
-    st.write("Oh no! Bug the Caterpillar spawned! :bug:")
-    st.session_state.show_popup = True
-
-# endregion
-
-# ===============================
-# region Bug the Caterpillar random
-# ===============================
-
-# Function to randomly set show_popup to True
-def random_bug():
-    if random.random() < 0.005:  # 0.5% chance to spawn Bug the Caterpillar
-        st.session_state.show_bug = True
-        st.session_state.show_popup = True
-
-# Call the function to potentially show the popup
-random_bug()
-    
-# endregion
-
-# ===============================
 # region Cookie pop-up
 # ===============================
 
@@ -138,6 +47,250 @@ def show_modal():
 if not st.session_state.modal_shown:
    show_modal()
    st.session_state.modal_shown = True
+
+# endregion
+
+if 'first_run' not in st.session_state:
+    st.session_state.first_run = True
+
+# ===============================
+# region Bug the Caterpillar
+# ===============================
+
+# ===============================
+# region Bug random path
+# ===============================
+
+# Generate random positions within the specified range
+@st.cache_data
+def Bug_random_positions(num_points=100):
+    positions = []
+    for _ in range(num_points):
+        top = random.randint(12, 95)  # Random top position (12% to 95%)
+        left = random.randint(5, 95)  # Random left position (5% to 95%)
+        positions.append((top, left))
+        # Ensure the last position matches the first
+    positions.append(positions[0])
+    return positions
+
+# Generate random keyframe positions
+random_positions_Bug = Bug_random_positions()
+
+# endregion
+
+# ===============================
+# region Bug keyframes
+# ===============================
+
+@st.cache_data
+def keyframes_CSS_Bug(random_positions_Bug):
+    keyframes = "@keyframes move_Bug {"
+    step = 0
+    for top, left in random_positions_Bug:
+        keyframes += f"{step}% {{ top: {top}%; left: {left}%; }}"
+        step += int(100 / (len(random_positions_Bug) - 1))  # Evenly distribute steps
+    keyframes += "}"
+    return keyframes
+
+keyframes_Bug = keyframes_CSS_Bug(random_positions_Bug)
+
+# endregion
+
+# ===============================
+# region Bug CSS
+# ===============================
+
+st.markdown(
+    f"""
+    <style>
+    body {{
+        overflow: hidden; /* Prevent scrollbars if the bug moves beyond visible areas */
+    }}
+
+    .bug {{
+        font-size: 25px; /* Perfect bug size */
+        position: fixed; /* Fixed positioning allows movement across the entire screen */
+        z-index: 1000; /* Ensure it floats above all Streamlit components */
+        animation: move_Bug 400s linear infinite; /* Smooth and infinite roaming */
+        pointer-events: none; /* Allow interaction with elements underneath */
+    }}
+
+    {keyframes_Bug}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# endregion
+
+# ===============================
+# region Bug initialize
+# ===============================
+
+if "show_bug" not in st.session_state:
+    st.session_state.show_bug = False
+
+# endregion
+
+# ===============================
+# region Bug pop-up initialize
+# ===============================
+
+# Initialize session state for Bug the Caterpillar visibility
+if 'show_popup_Bug' not in st.session_state:
+    st.session_state.show_popup_Bug = False
+
+# Function to display the Bug the Caterpillar pop-up
+@st.dialog("Bug the Caterpillar")
+def show_popup_Bug():
+    st.write("Oh no! Bug the Caterpillar spawned! :bug:")
+    st.session_state.show_popup_Bug = True
+
+# endregion
+
+# ===============================
+# region Bug random spawn
+# ===============================
+
+# Function to randomly set show_popup to True
+def random_bug():
+    if random.random() < 0.005:  # 0.5% chance to spawn Bug the Caterpillar
+        if not st.session_state.show_bug:
+            st.session_state.show_bug = True
+            if not st.session_state.show_popup_Bug and not st.session_state.first_run:
+                show_popup_Bug()
+    else:
+        pass
+
+# Call the function to potentially show the popup
+random_bug()
+    
+# endregion
+
+# endregion
+
+# ===============================
+# region Escargot the Snail
+# ===============================
+
+# ===============================
+# region Escargot random path
+# ===============================
+
+@st.cache_data
+def Escargot_random_positions(num_points=100):
+    positions = []
+    # Randomly choose a starting point outside the screen
+    # start_position = random.choice([
+    #     (10, random.randint(12, 95)),  # Above the screen
+    #     (random.randint(5, 95), 10),  # Left of the screen
+    #     (10, random.randint(12, 95)),  # Below the screen
+    #     (random.randint(5, 95), 10)   # Right of the screen
+    # ])
+    # positions.append(start_position)
+    for _ in range(num_points):
+        top = random.randint(12, 95)  # Random top position (12% to 95%)
+        left = random.randint(5, 95)  # Random left position (5% to 95%)
+        positions.append((top, left))
+    # Ensure the last position matches the first
+    positions.append(positions[0])
+    return positions
+
+random_positions_Escargot = Escargot_random_positions()
+
+# endregion
+
+# ===============================
+# region Escargot keyframes
+# ===============================
+
+@st.cache_data
+def keyframes_CSS_Escargot(random_positions_Escargot):
+    keyframes = "@keyframes move_Escargot {"
+    step = 0
+    for top, left in random_positions_Escargot:
+        keyframes += f"{step}% {{ top: {top}%; left: {left}%; }}"
+        step += int(100 / (len(random_positions_Escargot) - 1))  # Evenly distribute steps
+    keyframes += "}"
+    return keyframes
+
+keyframes_Escargot = keyframes_CSS_Escargot(random_positions_Escargot)
+
+# endregion
+
+# ===============================
+# region Escargot CSS
+# ===============================
+
+st.markdown(
+    f"""
+    <style>
+    body {{
+        overflow: hidden; /* Prevent scrollbars if the bug moves beyond visible areas */
+    }}
+
+    .escargot {{
+        font-size: 25px; /* Perfect bug size */
+        position: fixed; /* Fixed positioning allows movement across the entire screen */
+        z-index: 1000; /* Ensure it floats above all Streamlit components */
+        animation: move_Escargot 4000s linear infinite; /* Smooth and infinite roaming */
+        pointer-events: none; /* Allow interaction with elements underneath */
+    }}
+
+    {keyframes_Escargot}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# endregion
+
+# ===============================
+# region Escargot initialize
+# ===============================
+
+if "show_escargot" not in st.session_state:
+    st.session_state.show_escargot = False
+
+# endregion
+
+# ===============================
+# region Escargot pop-up initialize
+# ===============================
+
+# Initialize session state for Escargot the Snail visibility
+if 'show_popup_Escargot' not in st.session_state:
+    st.session_state.show_popup_Escargot = False
+
+# Function to display the Escargot the Snail pop-up
+@st.dialog("Monsieur Escargot the Snail")
+def show_popup_Escargot():
+    st.write("Escargot the Snail is is keeping you company! :snail:")
+    st.session_state.show_popup_Escargot = True
+
+# endregion
+
+# Function to randomly set show_popup to True
+def random_escargot():
+    if random.random() < 0.5:  # 0.5% chance to spawn Escargot the Snail
+        if not st.session_state.show_escargot:
+            st.session_state.show_escargot = True
+            if not st.session_state.show_popup_Escargot and not st.session_state.first_run:
+                show_popup_Escargot()
+    else:
+        st.session_state.first_run = False
+
+# Call the function to potentially show the popup
+random_escargot()
+
+# Display the bug if the button is clicked
+if st.session_state.show_escargot:
+    st.markdown(
+        """
+        <div class="escargot">🐌</div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # endregion
 
@@ -238,8 +391,8 @@ st.write("""
 # Button to toggle the bug visibility
 if st.button(':no_entry_sign: DON\'T PRESS!!!'):
     st.session_state.show_bug = True
-    if not st.session_state.show_popup:
-            show_popup()
+    if not st.session_state.show_popup_Bug:
+            show_popup_Bug()
 
 # Display the bug if the button is clicked
 if st.session_state.show_bug:
