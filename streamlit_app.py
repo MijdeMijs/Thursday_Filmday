@@ -50,8 +50,17 @@ if not st.session_state.modal_shown:
 
 # endregion
 
+# ===============================
+# region Sessionstate guards
+# ===============================
+
 if 'first_run' not in st.session_state:
     st.session_state.first_run = True
+
+if 'show_popup_Friends' not in st.session_state:
+    st.session_state.show_popup_Friends = False
+
+# endregion
 
 # ===============================
 # region Bug the Caterpillar
@@ -130,6 +139,9 @@ st.markdown(
 if "show_bug" not in st.session_state:
     st.session_state.show_bug = False
 
+if 'bug_first_run' not in st.session_state:
+    st.session_state.bug_first_run = False
+
 # endregion
 
 # ===============================
@@ -144,7 +156,6 @@ if 'show_popup_Bug' not in st.session_state:
 @st.dialog("Bug the Caterpillar")
 def show_popup_Bug():
     st.write("Oh no! Bug the Caterpillar spawned! :bug:")
-    st.session_state.show_popup_Bug = True
 
 # endregion
 
@@ -154,13 +165,8 @@ def show_popup_Bug():
 
 # Function to randomly set show_popup to True
 def random_bug():
-    if random.random() < 0.005:  # 0.5% chance to spawn Bug the Caterpillar
-        if not st.session_state.show_bug:
-            st.session_state.show_bug = True
-            if not st.session_state.show_popup_Bug and not st.session_state.first_run:
-                show_popup_Bug()
-    else:
-        pass
+    if not st.session_state.show_bug and random.random() < 0.005:  # 0.5% chance to spawn Bug the Caterpillar
+        st.session_state.show_bug = True
 
 # Call the function to potentially show the popup
 random_bug()
@@ -180,14 +186,6 @@ random_bug()
 @st.cache_data
 def Escargot_random_positions(num_points=100):
     positions = []
-    # Randomly choose a starting point outside the screen
-    # start_position = random.choice([
-    #     (10, random.randint(12, 95)),  # Above the screen
-    #     (random.randint(5, 95), 10),  # Left of the screen
-    #     (10, random.randint(12, 95)),  # Below the screen
-    #     (random.randint(5, 95), 10)   # Right of the screen
-    # ])
-    # positions.append(start_position)
     for _ in range(num_points):
         top = random.randint(12, 95)  # Random top position (12% to 95%)
         left = random.randint(5, 95)  # Random left position (5% to 95%)
@@ -252,6 +250,9 @@ st.markdown(
 if "show_escargot" not in st.session_state:
     st.session_state.show_escargot = False
 
+if 'escargot_first_run' not in st.session_state:
+    st.session_state.escargot_first_run = False
+
 # endregion
 
 # ===============================
@@ -266,19 +267,17 @@ if 'show_popup_Escargot' not in st.session_state:
 @st.dialog("Monsieur Escargot the Snail")
 def show_popup_Escargot():
     st.write("Escargot the Snail is is keeping you company! :snail:")
-    st.session_state.show_popup_Escargot = True
 
 # endregion
 
+# ===============================
+# region Random Escargot
+# ===============================
+
 # Function to randomly set show_popup to True
 def random_escargot():
-    if random.random() < 0.5:  # 0.5% chance to spawn Escargot the Snail
-        if not st.session_state.show_escargot:
-            st.session_state.show_escargot = True
-            if not st.session_state.show_popup_Escargot and not st.session_state.first_run:
-                show_popup_Escargot()
-    else:
-        st.session_state.first_run = False
+    if not st.session_state.show_escargot and random.random() < 0.05: # 5% chance to spawn Escargot the Snail
+        st.session_state.show_escargot = True
 
 # Call the function to potentially show the popup
 random_escargot()
@@ -291,6 +290,20 @@ if st.session_state.show_escargot:
         """,
         unsafe_allow_html=True,
     )
+
+# endregion
+
+# endregion
+
+# ===============================
+# region Both friends pop-up
+# ===============================
+
+# Function to display the both friends pop-up
+@st.dialog("Two buddies")
+def show_popup_Friends():
+    st.write('''Now you have two friends! Bug the Caterpillar :bug: 
+             and Escargot the Snail :snail:''')
 
 # endregion
 
@@ -385,14 +398,16 @@ st.write("""
 # endregion
 
 # ===============================
-# region Spawn bug
+# region Spawn friends
+# ===============================
+
+# ===============================
+# region Spawn Bug
 # ===============================
 
 # Button to toggle the bug visibility
 if st.button(':no_entry_sign: DON\'T PRESS!!!'):
     st.session_state.show_bug = True
-    if not st.session_state.show_popup_Bug:
-            show_popup_Bug()
 
 # Display the bug if the button is clicked
 if st.session_state.show_bug:
@@ -402,6 +417,40 @@ if st.session_state.show_bug:
         """,
         unsafe_allow_html=True,
     )
+
+# endregion
+
+# ===============================
+# region Control messages
+# ===============================
+
+if not st.session_state.first_run:
+    if st.session_state.show_bug and st.session_state.show_escargot and not st.session_state.show_popup_Friends:
+        show_popup_Friends()
+        st.write("Friends condition met")
+        st.session_state.show_popup_Friends = True
+        st.session_state.show_popup_Bug = True
+        st.session_state.show_popup_Escargot = True
+    elif (st.session_state.show_bug 
+          and not st.session_state.show_popup_Bug
+          and not st.session_state.bug_first_run):
+        show_popup_Bug()
+        st.write("Bug condition met")
+        # st.session_state.show_popup_Friends = True
+        st.session_state.show_popup_Bug = True
+    elif (st.session_state.show_escargot 
+          and not st.session_state.show_popup_Escargot 
+          and not st.session_state.escargot_first_run):
+        show_popup_Escargot()
+        st.write("Escargot condition met")
+        # st.session_state.show_popup_Friends = True
+        st.session_state.show_popup_Escargot = True
+else:
+    st.session_state.first_run = False
+    st.session_state.bug_first_run = st.session_state.show_bug 
+    st.session_state.escargot_first_run = st.session_state.show_escargot
+
+# endregion
 
 # endregion
 
