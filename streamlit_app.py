@@ -1124,7 +1124,8 @@ st.write(f'''In total, we've had **{n_nights} movie nights**! For these nights,
 
 st.subheader('Number of votes', divider='violet')
 
-st.write(f'''A total of **{n_votes} votes** where given! Here you see them per room:''')
+st.write(f'''A total of **{n_votes} votes** where given! These are the votes that where 
+         given per room.''')
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
@@ -1163,6 +1164,11 @@ fig_1 = plot_votes_per_room(archieve_df, theme)
 
 # Display the plot in Streamlit
 st.pyplot(fig_1)
+
+st.divider()
+
+st.write(f'''These are the cumulative votes that where recieved per room. Which room is the
+         most popular!?''')
 
 @st.cache_data
 def plot_votes_over_time(df, theme):
