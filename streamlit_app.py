@@ -1100,7 +1100,7 @@ plt.rcParams['axes.edgecolor'] = bordercolor
 # endregion
 
 # ===============================
-# region n movie nights
+# region General
 # ===============================
 
 n_nights = int(archieve_df['watched'].sum())
@@ -1156,10 +1156,50 @@ def plot_votes_per_room(df, theme):
     return fig
 
 # Call the function and cache the result
-fig = plot_votes_per_room(archieve_df, theme)
+fig_1 = plot_votes_per_room(archieve_df, theme)
 
 # Display the plot in Streamlit
-st.pyplot(fig)
+st.pyplot(fig_1)
+
+# Function to sum the votes per room and plot the bar chart
+@st.cache_data
+def plot_votes_over_time(df, theme):
+
+    force_recache = theme
+
+    # Plotting
+    fig, ax = plt.subplots()
+
+    # Get the unique groups
+    groups = df['room'].unique()
+
+    # Generate rainbow colors for the groups
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(groups)))
+
+    # Scatter plot with connecting lines per group using rainbow colors
+    for color, (key, grp) in zip(colors, df.groupby(['room'])):
+        ax.plot(grp['date'], grp['votes'], marker='o', linestyle='-',
+                label=key, color=color)
+
+    # Set labels and title
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Votes')
+    ax.set_title('Votes per Room Over Time')
+    
+    # Rotate x-axis labels to 45 degrees and format dates
+    plt.xticks(rotation=45)
+    ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%b %d, %Y'))
+
+    # Show legend
+    plt.legend(title='Room')
+
+    return fig
+
+# Call the function and cache the result
+fig_2 = plot_votes_over_time(archieve_df, theme)
+
+# Display the plot in Streamlit
+st.pyplot(fig_2)
 
 # endregion
 
