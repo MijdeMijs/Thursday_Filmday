@@ -17,7 +17,18 @@ import matplotlib.pyplot as plt
 # region Get theme
 # ===============================
 
-theme = st_theme()['base']
+# if list(st_theme())[4] == 'light':
+#     theme = 'light'
+#     st.write('light thingy')
+# else:
+#     theme = 'dark'
+#     st.write('dark thingy')
+
+theme = st_theme()
+
+theme_col = theme.get('base', 'light')
+
+st.write(theme_col)
 
 # endregion
 
@@ -1068,12 +1079,12 @@ st.write(
 # region Matplotlib settings
 # ===============================
 
-if theme == 'light':
+if theme_col == 'light':
     facecolor = 'white'
     axcolor = 'white'
     textcolor = 'black'
     bordercolor = 'black'
-elif theme == 'dark':
+elif theme_col == 'dark':
     facecolor = '#0e1117'
     axcolor = '#333333'
     textcolor = 'white'
