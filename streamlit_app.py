@@ -1129,6 +1129,46 @@ st.write(f'''A total of **{n_votes} votes** where given! These are the votes tha
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
+def plot_n_winner(df, theme):
+
+    force_recache = theme
+
+    # Sum the votes per room
+    n_winner = df.groupby('room')['watched'].sum()
+
+    # Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
+    bars = ax.bar(n_winner.index, n_winner.values, color=plt.cm.rainbow(np.linspace(0, 1, len(n_winner))), edgecolor='black')  # Set the bar colors to rainbow with black borders
+    ax.set_ylabel('n votes', fontsize=14)
+    ax.set_xticklabels(n_winner.index, rotation=0, fontsize=14)
+
+    # Set y-axis to show no decimals
+    ax.yaxis.get_major_locator().set_params(integer=True)
+    plt.yticks(fontsize=14)
+
+    # Remove x-axis label
+    ax.set_xlabel('')
+
+    # Add the count on top of the bars
+    for bar in bars:
+        yval = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2, yval + 1, int(yval), ha='center', va='bottom', fontsize=14)
+
+    # Set the y-axis limit to be 5 higher than the highest bar
+    ax.set_ylim(0, n_winner.max() + 5)
+
+    return fig
+
+# Call the function and cache the result
+fig_1 = plot_n_winner(archieve_df, theme)
+
+# Display the plot in Streamlit
+st.pyplot(fig_1)
+
+st.divider()         
+
+# Function to sum the votes per room and plot the bar chart
+@st.cache_data
 def plot_votes_per_room(df, theme):
 
     force_recache = theme
@@ -1160,10 +1200,10 @@ def plot_votes_per_room(df, theme):
     return fig
 
 # Call the function and cache the result
-fig_1 = plot_votes_per_room(archieve_df, theme)
+fig_2 = plot_votes_per_room(archieve_df, theme)
 
 # Display the plot in Streamlit
-st.pyplot(fig_1)
+st.pyplot(fig_2)
 
 st.divider()
 
@@ -1211,10 +1251,10 @@ def plot_votes_over_time(df, theme):
     return fig
 
 # Call the function and cache the result
-fig_2 = plot_votes_over_time(archieve_df, theme)
+fig_3 = plot_votes_over_time(archieve_df, theme)
 
 # Display the plot in Streamlit
-st.pyplot(fig_2)
+st.pyplot(fig_3)
 
 # endregion
 
