@@ -1287,8 +1287,10 @@ def convert_to_datetime(df):
     df['Date'] = pd.to_datetime(df['Date'])
     return df
 
+complete_movie_night_info = movie_night_info.copy()
+
 # Apply the function and cache the result
-complete_movie_night_info = convert_to_datetime(movie_night_info)
+complete_movie_night_info = convert_to_datetime(complete_movie_night_info)
 
 # Function to format the date
 @st.cache_data
@@ -1432,7 +1434,7 @@ if complete_archieve == 0:
         st.dataframe(styled_df, 
                     column_order=info_to_display, 
                     hide_index=True)
-
+    
     # endregion
 
     # endregion
