@@ -1122,10 +1122,10 @@ st.write(f'''In total, we've had **{n_nights} movie nights**! For these nights,
 # region Votes per Room plot
 # ===============================
 
-st.subheader('Number of votes', divider='violet')
+st.subheader('Winners', divider='violet')
 
-st.write(f'''A total of **{n_votes} votes** where given! These are the votes that where 
-         given per room.''')
+st.write(f'''Ever wondered who won the movie choice the most times!? Here you can see it!
+         And, like the result?''')
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
@@ -1139,7 +1139,7 @@ def plot_n_winner(df, theme):
     # Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
     fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
     bars = ax.bar(n_winner.index, n_winner.values, color=plt.cm.rainbow(np.linspace(0, 1, len(n_winner))), edgecolor='black')  # Set the bar colors to rainbow with black borders
-    ax.set_ylabel('n votes', fontsize=14)
+    ax.set_ylabel('n winner', fontsize=14)
     ax.set_xticklabels(n_winner.index, rotation=0, fontsize=14)
 
     # Set y-axis to show no decimals
@@ -1165,7 +1165,10 @@ fig_1 = plot_n_winner(archieve_df, theme)
 # Display the plot in Streamlit
 st.pyplot(fig_1)
 
-st.divider()         
+st.subheader('Number of votes', divider='violet')
+
+st.write(f'''A total of **{n_votes} votes** where given! These are the votes that where 
+         given per room.''')         
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
