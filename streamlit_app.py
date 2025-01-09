@@ -368,6 +368,8 @@ def load_data():
     data['date'] = pd.to_datetime(data['date'], 
                                   format='%Y-%m-%d %H:%M:%S')
 
+    data['cumulative_votes'] = data.groupby('room')['votes'].cumsum()
+
     return data, archieve_df_version
 
 # Load archieve data
@@ -1136,11 +1138,12 @@ def plot_votes_per_room(df, theme):
     # Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
     fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
     bars = ax.bar(votes_per_room.index, votes_per_room.values, color=plt.cm.rainbow(np.linspace(0, 1, len(votes_per_room))), edgecolor='black')  # Set the bar colors to rainbow with black borders
-    ax.set_ylabel('n votes')
-    ax.set_xticklabels(votes_per_room.index, rotation=0)
+    ax.set_ylabel('n votes', fontsize=14)
+    ax.set_xticklabels(votes_per_room.index, rotation=0, fontsize=14)
 
     # Set y-axis to show no decimals
     ax.yaxis.get_major_locator().set_params(integer=True)
+    plt.yticks(fontsize=14)
 
     # Remove x-axis label
     ax.set_xlabel('')
@@ -1148,7 +1151,7 @@ def plot_votes_per_room(df, theme):
     # Add the count on top of the bars
     for bar in bars:
         yval = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2, yval + 1, int(yval), ha='center', va='bottom')
+        ax.text(bar.get_x() + bar.get_width()/2, yval + 1, int(yval), ha='center', va='bottom', fontsize=14)
 
     # Set the y-axis limit to be 5 higher than the highest bar
     ax.set_ylim(0, votes_per_room.max() + 5)
@@ -1161,7 +1164,6 @@ fig_1 = plot_votes_per_room(archieve_df, theme)
 # Display the plot in Streamlit
 st.pyplot(fig_1)
 
-# Function to sum the votes per room and plot the bar chart
 @st.cache_data
 def plot_votes_over_time(df, theme):
 
@@ -1178,17 +1180,24 @@ def plot_votes_over_time(df, theme):
 
     # Scatter plot with connecting lines per group using rainbow colors
     for color, (key, grp) in zip(colors, df.groupby(['room'])):
-        ax.plot(grp['date'], grp['votes'], marker='o', linestyle='-',
+        ax.plot(grp['date'], grp['cumulative_votes'], marker='o', linestyle='-',
                 label=key, color=color)
 
     # Set labels and title
-    ax.set_xlabel('Date')
     ax.set_ylabel('Votes')
-    ax.set_title('Votes per Room Over Time')
+
+    # Set y-axis to show no decimals
+    ax.yaxis.get_major_locator().set_params(integer=True)
     
-    # Rotate x-axis labels to 45 degrees and format dates
-    plt.xticks(rotation=45)
+    # Rotate x-axis labels to format dates
     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%b %d, %Y'))
+
+    # Show one tick on the first of the month
+    ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator())
+    ax.xaxis.set_minor_locator(plt.matplotlib.dates.DayLocator(bymonthday=1))
+
+    # Align the dates on x-axis to make the year line up with the tick
+    fig.autofmt_xdate()
 
     # Show legend
     plt.legend(title='Room')
