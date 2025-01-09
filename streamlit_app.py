@@ -2,6 +2,7 @@
 # region Imports
 # ===============================
 import streamlit as st
+from streamlit_theme import st_theme
 import numpy as np
 import pandas as pd
 import time
@@ -9,6 +10,14 @@ from datetime import datetime
 import gzip
 import random
 import matplotlib.pyplot as plt
+
+# endregion
+
+# ===============================
+# region Get theme
+# ===============================
+
+theme = st_theme()['base']
 
 # endregion
 
@@ -536,7 +545,7 @@ st.write('**Genre:**')
 # ===============================
 
 def AND_OR():
-    if st.checkbox('AND/OR operator'):
+    if st.toggle('AND/OR operator'):
         operator = 1
         st.write('''**OR** operator is selected to pass your genres. Notice that this 
                  could give :red[**less precise**], but :red[**more movie options**]!''')
@@ -860,7 +869,7 @@ elif display_df.empty:
     st.error('No movies found within the boundaries of the chosen filters!')
 else:
     st.write(f'Found **{len(display_df)}** films within your chosen filters:')
-    st.write(display_df.iloc[:, 1:])
+    st.dataframe(display_df.iloc[:, 1:])
 
 # endregion
 
@@ -961,7 +970,7 @@ else:
         sort_column = st.selectbox("Select a movie feature:", display_df.columns[[6, 2, 3, 7]])
         
         # Descending or ascending
-        if st.checkbox('Descending or ascending'):
+        if st.toggle('Descending or ascending'):
             ascent = True
             st.write(f'Currently, **{sort_column}** is ordered in **ascending** order.')
         else:
@@ -993,7 +1002,7 @@ else:
 
         # Link button in first column
         with spin_col1:
-            st.link_button("Visit IMDb film page!", url)
+            st.link_button("Visit IMDb page!", url)
 
         # Spinner in second column
         with spin_col2:
@@ -1038,7 +1047,7 @@ else:
 
     st.write(f'Top **{top_n} / {len(display_df)}** based on **{ascent_descent} {sort_column}**:')
 
-    st.write(top_list.iloc[:, 1:])
+    st.dataframe(top_list.iloc[:, 1:])
 
     # endregion
 
@@ -1056,6 +1065,32 @@ st.write(
 )
 
 # ===============================
+# region Matplotlib settings
+# ===============================
+
+if theme == 'light':
+    facecolor = 'white'
+    axcolor = 'white'
+    textcolor = 'black'
+    bordercolor = 'black'
+elif theme == 'dark':
+    facecolor = '#0e1117'
+    axcolor = '#333333'
+    textcolor = 'white'
+    bordercolor = 'white'
+
+# Apply the facecolor to all future plots
+plt.rcParams['figure.facecolor'] = facecolor
+plt.rcParams['axes.facecolor'] = axcolor
+plt.rcParams['text.color'] = textcolor
+plt.rcParams['axes.labelcolor'] = textcolor
+plt.rcParams['xtick.color'] = textcolor
+plt.rcParams['ytick.color'] = textcolor
+plt.rcParams['axes.edgecolor'] = bordercolor
+
+# endregion
+
+# ===============================
 # region n movie nights
 # ===============================
 
@@ -1067,26 +1102,32 @@ n_canceled = int(archieve_df.groupby('date')['canceled'].max().sum())
 
 st.write(f'''In total, we've had **{n_nights} movie nights**! For these nights, 
          **{n_suggest} films** where suggested of which **{n_suggest_unique} films** 
-         where unique films. A total of **{n_votes} votes** where given! Unfortunately,
+         where unique films. Unfortunately,
          we had to cancel **{n_canceled} movie nights**...''')
 
 # endregion
 
 # ===============================
-# region Votes per Rooom plot
+# region Votes per Room plot
 # ===============================
+
+st.subheader('Number of votes', divider='violet')
+
+st.write(f'''A total of **{n_votes} votes** where given! Here you see them per room:''')
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
-def plot_votes_per_room(df):
+def plot_votes_per_room(df, theme):
+
+    force_recache = theme
+
     # Sum the votes per room
     votes_per_room = df.groupby('room')['votes'].sum()
 
     # Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
-    fig, ax = plt.subplots(figsize=(10, 6), facecolor='#B0B0B0')  # Set the figure background color to white
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
     bars = ax.bar(votes_per_room.index, votes_per_room.values, color=plt.cm.rainbow(np.linspace(0, 1, len(votes_per_room))), edgecolor='black')  # Set the bar colors to rainbow with black borders
-    ax.set_ylabel('Total Votes')
-    ax.set_title('Total Votes per Room')
+    ax.set_ylabel('n votes')
     ax.set_xticklabels(votes_per_room.index, rotation=0)
 
     # Set y-axis to show no decimals
@@ -1103,17 +1144,10 @@ def plot_votes_per_room(df):
     # Set the y-axis limit to be 5 higher than the highest bar
     ax.set_ylim(0, votes_per_room.max() + 5)
 
-    # Set the axis background color to medium grey
-    ax.set_facecolor('#B0B0B0')
-
-    # Add a black border around the entire image
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(2)
-
     return fig
 
 # Call the function and cache the result
-fig = plot_votes_per_room(archieve_df)
+fig = plot_votes_per_room(archieve_df, theme)
 
 # Display the plot in Streamlit
 st.pyplot(fig)
@@ -1138,7 +1172,7 @@ st.write('''The Film Archive is a comprehensive hub where you can revisit all th
          and discover new favorites!''')
 
 # Check data set version
-if archieve_df_version.month == datetime.now().month:
+if archieve_df_version.month == datetime.now().month:    
     archieve_df_version = archieve_df_version.strftime('%B %d, %Y')
     text = f'*IMDb data version: **{archieve_df_version}***'
     st.markdown(f'''<span style="font-size: 13px;">*Archieve version: 
@@ -1231,10 +1265,68 @@ negative_random_emoji = random.choice(negative_emojis)
 # endregion
 
 # ===============================
+# region Complete archieve cache
+# ===============================
+
+# ===============================
+# region Format date
+# ===============================
+
+# Function to convert the 'Date' column to datetime
+@st.cache_data
+def convert_to_datetime(df):
+    df['Date'] = pd.to_datetime(df['Date'])
+    return df
+
+# Apply the function and cache the result
+complete_movie_night_info = convert_to_datetime(movie_night_info)
+
+# Function to format the date
+@st.cache_data
+def format_date(date):
+    return date.strftime('%d %b %Y')
+
+# Apply the function to the 'Date' column and replace the original column
+complete_movie_night_info['Date'] = complete_movie_night_info['Date'].apply(format_date)
+
+# endregion
+
+# ===============================
+# region Format grey color
+# ===============================
+
+@st.cache_data
+def color_alternate_weeks(df):
+    colors = ['background-color: rgba(255, 255, 255, 0.25)', 
+              'background-color: rgba(128, 128, 128, 0.2)']
+    color_map = []
+    current_color = 0
+    
+    for i in range(len(df)):
+        # Determine alternating week color
+        if i == 0 or (pd.to_datetime(df['Date'].iloc[i]).isocalendar()[1] != pd.to_datetime(df['Date'].iloc[i - 1]).isocalendar()[1]):
+            current_color = 1 - current_color
+        row_color = [colors[current_color]] * len(df.columns)
+
+        # Check if 'watched' == 1 and override color for the row
+        if df['watched'].iloc[i] == 1:
+            row_color = ['background-color: rgba(152, 251, 152, 0.3)'] * len(df.columns)
+          
+        color_map.append(row_color)
+      
+    return pd.DataFrame(color_map, index=df.index, columns=df.columns)
+
+styled_df = complete_movie_night_info.style.apply(color_alternate_weeks, axis=None)
+
+# endregion
+
+# endregion
+
+# ===============================
 # region Archieve checkbox
 # ===============================
 
-if st.checkbox('View entire archieve'):
+if st.toggle('View entire archieve'):
     complete_archieve = 1
 else:
     complete_archieve = 0
@@ -1295,7 +1387,7 @@ if complete_archieve == 0:
     })
 
     info_to_display = (list(single_movie_night_info.columns[4:7]) + 
-                        list(single_movie_night_info.columns[8:]))
+                       list(single_movie_night_info.columns[8:]))
 
     # endregion
 
@@ -1304,17 +1396,16 @@ if complete_archieve == 0:
     # ===============================
 
     if single_movie_night_info['Movie snack'].isnull().all():
-        st.write(f'''During this movie night, there was **no movie snack**
-                {negative_random_emoji}''')
+        st.write(f'''During this movie night, there was **no movie snack** 
+                 {negative_random_emoji}''')
     else:
+        movie_snack = single_movie_night_info['Movie snack'].dropna().iloc[0]
         if (single_movie_night_info['Date'] == datetime(2024, 5, 30)).any():
-            movie_snack = single_movie_night_info['Movie snack'].dropna().iloc[0]
             st.write(f'''The movie snack of this movie night was: 
-                    **{movie_snack}** :couplekiss:''')
+                     **{movie_snack}** :couplekiss:''')
         else:
-            movie_snack = single_movie_night_info['Movie snack'].dropna().iloc[0]
             st.write(f'''The movie snack of this movie night was: 
-                    **{movie_snack}** {positive_random_emoji}''')
+                     **{movie_snack}** {positive_random_emoji}''')
 
     # endregion
 
@@ -1325,7 +1416,6 @@ if complete_archieve == 0:
     # Display the styled dataframe in Streamlit
     if sum(single_movie_night_info['canceled']) >= 1:
         st.error("This movie night was canceled...")
-
         st.dataframe(styled_df, 
                     column_order=info_to_display, 
                     hide_index=True)
@@ -1342,60 +1432,6 @@ else:
     # ===============================
     # region Complete
     # ===============================
-
-    # ===============================
-    # region Format date
-    # ===============================
-
-    # movie_night_info['Date'] = pd.to_datetime(movie_night_info['Date'])
-
-    # Function to convert the 'Date' column to datetime
-    @st.cache_data
-    def convert_to_datetime(df):
-        df['Date'] = pd.to_datetime(df['Date'])
-        return df
-
-    # Apply the function and cache the result
-    movie_night_info = convert_to_datetime(movie_night_info)
-
-    # Function to format the date
-    @st.cache_data
-    def format_date(date):
-        return date.strftime('%d %b %Y')
-
-    # Apply the function to the 'Date' column and replace the original column
-    movie_night_info['Date'] = movie_night_info['Date'].apply(format_date)
-
-    # endregion
-
-    # ===============================
-    # region Format grey color
-    # ===============================
-
-    @st.cache_data
-    def color_alternate_weeks(df):
-        colors = ['background-color: rgba(255, 255, 255, 0.25)', 
-                  'background-color: rgba(128, 128, 128, 0.2)']
-        color_map = []
-        current_color = 0
-        
-        for i in range(len(df)):
-            # Determine alternating week color
-            if i == 0 or (pd.to_datetime(df['Date'].iloc[i]).isocalendar()[1] != pd.to_datetime(df['Date'].iloc[i - 1]).isocalendar()[1]):
-                current_color = 1 - current_color
-            row_color = [colors[current_color]] * len(df.columns)
-
-            # Check if 'watched' == 1 and override color for the row
-            if df['watched'].iloc[i] == 1:
-                row_color = ['background-color: rgba(152, 251, 152, 0.3)'] * len(df.columns)
-            
-            color_map.append(row_color)
-        
-        return pd.DataFrame(color_map, index=df.index, columns=df.columns)
-
-    styled_df = movie_night_info.style.apply(color_alternate_weeks, axis=None)
-
-    # endregion
 
     # ===============================
     # region Format values
@@ -1467,7 +1503,7 @@ with left_column:
 
     # Link button in first column
     with archieve_col1:
-        st.link_button("Visit IMDb film page!", url_from_archieve)
+        st.link_button("Visit IMDb page!", url_from_archieve)
 
         # Spinner in second column
     with archieve_col2:
