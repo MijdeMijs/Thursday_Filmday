@@ -1325,7 +1325,7 @@ def color_alternate_weeks(df):
       
     return pd.DataFrame(color_map, index=df.index, columns=df.columns)
 
-styled_df = complete_movie_night_info.style.apply(color_alternate_weeks, axis=None)
+styled_df_complete = complete_movie_night_info.style.apply(color_alternate_weeks, axis=None)
 
 # endregion
 
@@ -1447,7 +1447,7 @@ else:
     # ===============================
 
     # Preserve integer formatting 
-    styled_df = styled_df.format({
+    styled_df_complete = styled_df_complete.format({
         'watched': '{:.0f}',
         'canceled': '{:.0f}',
         'Votes': '{:.0f}',
@@ -1463,12 +1463,12 @@ else:
     # region Select display
     # ===============================
 
-    info_to_display = list(styled_df.columns[3:])
+    info_to_display = list(styled_df_complete.columns[3:])
 
     st.write(f'''This is the archieve complete film archieve! It includes a stunning
              **{n_nights} movie nights**! Elected films are highlighted in green.''')
 
-    st.dataframe(styled_df, 
+    st.dataframe(styled_df_complete, 
                  column_order=info_to_display, 
                  hide_index=True)
 
