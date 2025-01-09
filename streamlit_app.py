@@ -28,8 +28,6 @@ theme = st_theme()
 
 theme_col = theme.get('base', 'light')
 
-st.write(theme_col)
-
 # endregion
 
 # ===============================
