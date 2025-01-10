@@ -1105,6 +1105,16 @@ plt.rcParams['axes.edgecolor'] = bordercolor
 # region General
 # ===============================
 
+@st.cache_data
+def watched(archieve_df):
+    # Filter the DataFrame to include only rows where 'watched' is equal to 1
+    watched_df = archieve_df[archieve_df['watched'] == 1]
+    return watched_df
+
+watched_df = watched(archieve_df)    
+
+n_unique_genres = watched_df['main_genre'].nunique()     
+
 n_nights = int(archieve_df['watched'].sum())
 n_suggest = archieve_df['primaryTitle'].dropna().count()
 n_suggest_unique = archieve_df['primaryTitle'].nunique()
@@ -1125,7 +1135,7 @@ st.write(f'''In total, we've had **{n_nights} movie nights**! For these nights,
 st.subheader('Winners', divider='violet')
 
 st.write(f'''Ever wondered who won the movie choice the most times!? Here you can see it!
-         And, like the result?''')
+         And? Like the result? :first_place_medal:''')    
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
@@ -1139,7 +1149,7 @@ def plot_n_winner(df, theme):
     # Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
     fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
     bars = ax.bar(n_winner.index, n_winner.values, color=plt.cm.rainbow(np.linspace(0, 1, len(n_winner))), edgecolor='black')  # Set the bar colors to rainbow with black borders
-    ax.set_ylabel('n winner', fontsize=14)
+    ax.set_ylabel('Times won', fontsize=14)
     ax.set_xticklabels(n_winner.index, rotation=0, fontsize=14)
 
     # Set y-axis to show no decimals
@@ -1167,8 +1177,8 @@ st.pyplot(fig_1)
 
 st.subheader('Number of votes', divider='violet')
 
-st.write(f'''A total of **{n_votes} votes** where given! These are the votes that where 
-         given per room.''')         
+st.write(f'''A total of **{n_votes} votes** where given! Top :thumbsup:! These are the 
+        votes that where given per room.''')         
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
@@ -1182,7 +1192,7 @@ def plot_votes_per_room(df, theme):
     # Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
     fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
     bars = ax.bar(votes_per_room.index, votes_per_room.values, color=plt.cm.rainbow(np.linspace(0, 1, len(votes_per_room))), edgecolor='black')  # Set the bar colors to rainbow with black borders
-    ax.set_ylabel('n votes', fontsize=14)
+    ax.set_ylabel('Total votes', fontsize=14)
     ax.set_xticklabels(votes_per_room.index, rotation=0, fontsize=14)
 
     # Set y-axis to show no decimals
@@ -1210,8 +1220,8 @@ st.pyplot(fig_2)
 
 st.divider()
 
-st.write(f'''These are the cumulative votes that where recieved per room. Which room is the
-         most popular!?''')
+st.write(f'''These are the cumulative votes that where recieved per room. Which 
+         room is the most popular :star: !?''')
 
 @st.cache_data
 def plot_votes_over_time(df, theme):
@@ -1233,7 +1243,7 @@ def plot_votes_over_time(df, theme):
                 label=key, color=color)
 
     # Set labels and title
-    ax.set_ylabel('Votes')
+    ax.set_ylabel('Cumulative votes')
 
     # Set y-axis to show no decimals
     ax.yaxis.get_major_locator().set_params(integer=True)
@@ -1258,6 +1268,48 @@ fig_3 = plot_votes_over_time(archieve_df, theme)
 
 # Display the plot in Streamlit
 st.pyplot(fig_3)
+
+st.subheader('Genres', divider='violet')
+
+st.write(f'''We have watched films from **{n_unique_genres} different main genres**.
+         What do you think? Are we drama queens :crown: or anime nerds :nerd_face: ???''') 
+
+@st.cache_data
+def plot_n_genres(df, theme):
+
+    force_recache = theme
+
+    # Sum the votes per room
+    n_genre = df['main_genre'].value_counts().sort_values(ascending=True)
+
+    # Plot a horizontal bar chart with rainbow bars, black borders, and medium grey background within the axis
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
+    bars = ax.barh(n_genre.index, n_genre.values, color=plt.cm.rainbow(np.linspace(0, 1, len(n_genre))), edgecolor='black')  # Set the bar colors to rainbow with black borders
+    ax.set_xlabel('Times watched', fontsize=16)
+    ax.set_yticklabels(n_genre.index, rotation=0, fontsize=14)
+
+    # Set x-axis to show no decimals
+    ax.xaxis.get_major_locator().set_params(integer=True)
+    plt.xticks(fontsize=14)
+
+    # Remove y-axis label
+    ax.set_ylabel('')
+
+    # Add the count on top of the bars
+    for bar in bars:
+        xval = bar.get_width()
+        ax.text(xval + 1, bar.get_y() + bar.get_height()/2, int(xval), ha='left', va='center', fontsize=14)
+
+    # Set the x-axis limit to be 5 higher than the highest bar
+    ax.set_xlim(0, n_genre.max() + 5)
+
+    return fig
+
+# Call the function and cache the result
+fig_4 = plot_n_genres(watched_df, theme)
+
+# Display the plot in Streamlit
+st.pyplot(fig_4)
 
 # endregion
 
