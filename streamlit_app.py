@@ -482,7 +482,8 @@ st.header("Film Chooser", divider="rainbow")
 st.write('''Welcome to the Film Chooser! This is a tool that might help you to choose a 
          movie for the movie night. It is very simple to use, but here are some tips:''')
 
-st.write("""[Search Filters](#search-filters) - When starting the Thursday Filmday app, 
+st.write("""
+         **[Search Filters](#search-filters):** When starting the Thursday Filmday app, 
          default filter settings are applied. You can select a main genre and additional 
          genres, or choose **'No preference for any genre...'** to avoid filtering by 
          genre. If you want to filter genres but don't care about the main genre, select 
@@ -490,17 +491,20 @@ st.write("""[Search Filters](#search-filters) - When starting the Thursday Filmd
          settings might exclude good movies. For blockbusters, set a high filter on votes 
          (minimum 200,000).""")
 
-st.write('''[Applied Filters](#applied-filters) - Get a short overview of the filter 
-         settings.''')
+st.write("""
+         **[Applied Filters](#applied-filters):** Get a short overview of the filter 
+         settings.""")
 
-st.write('''[Possible Movies](#possible-movies) - In this list, you'll find all films 
-         that match the filter settings you choose. This list will automatically update if 
-         you decide to change the filter settings. You'll also see how many films were 
-         found and get notified with a warning if you didn't select a genre.''')
+st.write("""
+         **[Possible Movies](#possible-movies):** In this list, you'll find all films that
+         match the filter settings you choose. This list will automatically update if you 
+         decide to change the filter settings. You'll also see how many films were found 
+         and get notified with a warning if you didn't select a genre.""")
 
-st.write('''[Visit IMDb Page](#visit-imdb-page) - With this function, you can easily visit 
+st.write("""
+         **[Visit IMDb Page](#visit-imdb-page):** With this function, you can easily visit 
          the IMDb film pages of movies that are in the Possible Movies list. Here, you 
-         select a subset of films based on a movie's feature that you choose.''')
+         select a subset of films based on a movie's feature that you choose.""")
 
 st.markdown("""
     <style>
