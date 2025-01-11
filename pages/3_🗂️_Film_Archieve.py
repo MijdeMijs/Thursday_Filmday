@@ -6,6 +6,307 @@ import pandas as pd
 import time
 from datetime import datetime
 import random
+import random
+
+# endregion
+
+# ===============================
+# region Little friends
+# ===============================
+
+# ===============================
+# region Sessionstate guards
+# ===============================
+
+if 'first_run' not in st.session_state:
+    st.session_state.first_run = True
+
+if 'show_popup_Friends' not in st.session_state:
+    st.session_state.show_popup_Friends = False
+
+# endregion
+
+# ===============================
+# region Bug the Caterpillar
+# ===============================
+
+# ===============================
+# region Bug random path
+# ===============================
+
+# Generate random positions within the specified range
+def Bug_random_positions(num_points=100):
+    positions = []
+    for _ in range(num_points):
+        top = random.randint(12, 95)  # Random top position (12% to 95%)
+        left = random.randint(5, 95)  # Random left position (5% to 95%)
+        positions.append((top, left))
+        # Ensure the last position matches the first
+    positions.append(positions[0])
+    return positions
+
+# Generate random keyframe positions
+random_positions_Bug = Bug_random_positions()
+
+# endregion
+
+# ===============================
+# region Bug keyframes
+# ===============================
+
+def keyframes_CSS_Bug(random_positions_Bug):
+    keyframes = "@keyframes move_Bug {"
+    step = 0
+    for top, left in random_positions_Bug:
+        keyframes += f"{step}% {{ top: {top}%; left: {left}%; }}"
+        step += int(100 / (len(random_positions_Bug) - 1))  # Evenly distribute steps
+    keyframes += "}"
+    return keyframes
+
+keyframes_Bug = keyframes_CSS_Bug(random_positions_Bug)
+
+# endregion
+
+# ===============================
+# region Bug CSS
+# ===============================
+
+st.markdown(
+    f"""
+    <style>
+    body {{
+        overflow: hidden; /* Prevent scrollbars if the bug moves beyond visible areas */
+    }}
+
+    .bug {{
+        font-size: 25px; /* Perfect bug size */
+        position: fixed; /* Fixed positioning allows movement across the entire screen */
+        z-index: 1000; /* Ensure it floats above all Streamlit components */
+        animation: move_Bug 400s linear infinite; /* Smooth and infinite roaming */
+        pointer-events: none; /* Allow interaction with elements underneath */
+    }}
+
+    {keyframes_Bug}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# endregion
+
+# ===============================
+# region Bug initialize
+# ===============================
+
+if "show_bug" not in st.session_state:
+    st.session_state.show_bug = False
+
+if 'bug_first_run' not in st.session_state:
+    st.session_state.bug_first_run = False
+
+# endregion
+
+# ===============================
+# region Bug pop-up initialize
+# ===============================
+
+# Initialize session state for Bug the Caterpillar visibility
+if 'show_popup_Bug' not in st.session_state:
+    st.session_state.show_popup_Bug = False
+
+# Function to display the Bug the Caterpillar pop-up
+@st.dialog("Bug the Caterpillar")
+def show_popup_Bug():
+    st.write("Oh no! Bug the Caterpillar spawned! :bug:")
+
+# endregion
+
+# ===============================
+# region Bug random spawn
+# ===============================
+
+# Function to randomly set show_popup to True
+def random_bug():
+    if not st.session_state.show_bug and random.random() < 0.005:  # 0.5% chance to spawn Bug the Caterpillar
+        st.session_state.show_bug = True
+
+# Call the function to potentially show the popup
+random_bug()
+
+# Display the bug if the button is clicked
+if st.session_state.show_bug:
+    st.markdown(
+        """
+        <div class="bug">🐛</div>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+# endregion
+
+# endregion
+
+# ===============================
+# region Escargot the Snail
+# ===============================
+
+# ===============================
+# region Escargot random path
+# ===============================
+
+def Escargot_random_positions(num_points=100):
+    positions = []
+    for _ in range(num_points):
+        top = random.randint(12, 95)  # Random top position (12% to 95%)
+        left = random.randint(5, 95)  # Random left position (5% to 95%)
+        positions.append((top, left))
+    # Ensure the last position matches the first
+    positions.append(positions[0])
+    return positions
+
+random_positions_Escargot = Escargot_random_positions()
+
+# endregion
+
+# ===============================
+# region Escargot keyframes
+# ===============================
+
+def keyframes_CSS_Escargot(random_positions_Escargot):
+    keyframes = "@keyframes move_Escargot {"
+    step = 0
+    for top, left in random_positions_Escargot:
+        keyframes += f"{step}% {{ top: {top}%; left: {left}%; }}"
+        step += int(100 / (len(random_positions_Escargot) - 1))  # Evenly distribute steps
+    keyframes += "}"
+    return keyframes
+
+keyframes_Escargot = keyframes_CSS_Escargot(random_positions_Escargot)
+
+# endregion
+
+# ===============================
+# region Escargot CSS
+# ===============================
+
+st.markdown(
+    f"""
+    <style>
+    body {{
+        overflow: hidden; /* Prevent scrollbars if the bug moves beyond visible areas */
+    }}
+
+    .escargot {{
+        font-size: 25px; /* Perfect bug size */
+        position: fixed; /* Fixed positioning allows movement across the entire screen */
+        z-index: 1000; /* Ensure it floats above all Streamlit components */
+        animation: move_Escargot 4000s linear infinite; /* Smooth and infinite roaming */
+        pointer-events: none; /* Allow interaction with elements underneath */
+    }}
+
+    {keyframes_Escargot}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# endregion
+
+# ===============================
+# region Escargot initialize
+# ===============================
+
+if "show_escargot" not in st.session_state:
+    st.session_state.show_escargot = False
+
+if 'escargot_first_run' not in st.session_state:
+    st.session_state.escargot_first_run = False
+
+# endregion
+
+# ===============================
+# region Escargot pop-up initialize
+# ===============================
+
+# Initialize session state for Escargot the Snail visibility
+if 'show_popup_Escargot' not in st.session_state:
+    st.session_state.show_popup_Escargot = False
+
+# Function to display the Escargot the Snail pop-up
+@st.dialog("Monsieur Escargot the Snail")
+def show_popup_Escargot():
+    st.write("Escargot the Snail is is keeping you company! :snail:")
+
+# endregion
+
+# ===============================
+# region Random Escargot
+# ===============================
+
+# Function to randomly set show_popup to True
+def random_escargot():
+    if not st.session_state.show_escargot and random.random() < 0.025: # 2.5% chance to spawn Escargot the Snail
+        st.session_state.show_escargot = True
+
+# Call the function to potentially show the popup
+random_escargot()
+
+# Display the bug if the button is clicked
+if st.session_state.show_escargot:
+    st.markdown(
+        """
+        <div class="escargot">🐌</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# endregion
+
+# endregion
+
+# ===============================
+# region Both friends pop-up
+# ===============================
+
+# Function to display the both friends pop-up
+@st.dialog("Two buddies")
+def show_popup_Friends():
+    st.write('''Now you have two friends! Bug the Caterpillar :bug: 
+             and Escargot the Snail :snail:''')
+
+# endregion
+
+# ===============================
+# region Control messages
+# ===============================
+
+if not st.session_state.first_run:
+    if st.session_state.show_bug and st.session_state.show_escargot and not st.session_state.show_popup_Friends:
+        show_popup_Friends()
+        st.write("Friends condition met")
+        st.session_state.show_popup_Friends = True
+        st.session_state.show_popup_Bug = True
+        st.session_state.show_popup_Escargot = True
+    elif (st.session_state.show_bug 
+          and not st.session_state.show_popup_Bug
+          and not st.session_state.bug_first_run):
+        show_popup_Bug()
+        st.write("Bug condition met")
+        # st.session_state.show_popup_Friends = True
+        st.session_state.show_popup_Bug = True
+    elif (st.session_state.show_escargot 
+          and not st.session_state.show_popup_Escargot 
+          and not st.session_state.escargot_first_run):
+        show_popup_Escargot()
+        st.write("Escargot condition met")
+        # st.session_state.show_popup_Friends = True
+        st.session_state.show_popup_Escargot = True
+else:
+    st.session_state.first_run = False
+    st.session_state.bug_first_run = st.session_state.show_bug 
+    st.session_state.escargot_first_run = st.session_state.show_escargot
+
+# endregion
 
 # endregion
 

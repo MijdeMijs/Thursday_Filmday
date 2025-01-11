@@ -2,25 +2,7 @@
 # region Imports
 # ===============================
 import streamlit as st
-from streamlit_theme import st_theme
-import numpy as np
-import pandas as pd
-import time
-from datetime import datetime
-import gzip
 import random
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
-# endregion
-
-# ===============================
-# region Get theme
-# ===============================
-
-theme = st_theme()
-
-theme_col = theme.get('base', 'light')
 
 # endregion
 
@@ -83,7 +65,6 @@ if 'show_popup_Friends' not in st.session_state:
 # ===============================
 
 # Generate random positions within the specified range
-@st.cache_data
 def Bug_random_positions(num_points=100):
     positions = []
     for _ in range(num_points):
@@ -103,7 +84,6 @@ random_positions_Bug = Bug_random_positions()
 # region Bug keyframes
 # ===============================
 
-@st.cache_data
 def keyframes_CSS_Bug(random_positions_Bug):
     keyframes = "@keyframes move_Bug {"
     step = 0
@@ -195,7 +175,6 @@ random_bug()
 # region Escargot random path
 # ===============================
 
-@st.cache_data
 def Escargot_random_positions(num_points=100):
     positions = []
     for _ in range(num_points):
@@ -214,7 +193,6 @@ random_positions_Escargot = Escargot_random_positions()
 # region Escargot keyframes
 # ===============================
 
-@st.cache_data
 def keyframes_CSS_Escargot(random_positions_Escargot):
     keyframes = "@keyframes move_Escargot {"
     step = 0
@@ -320,69 +298,6 @@ def show_popup_Friends():
 # endregion
 
 # ===============================
-# region Load data
-# ===============================
-
-# ===============================
-# region IMDb data
-# ===============================
-
-# Define load and cache IMDb data
-@st.cache_data
-def load_data():
-    # Load the gzipped CSV file into a pandas DataFrame
-    with gzip.open('IMDb_data.csv.gz', 'rt', encoding='utf-8') as file:
-        data = pd.read_csv(file)
-    
-    IMDb_df_version = pd.to_datetime(data.iloc[0, 0])
-
-    data = data.iloc[1:].reset_index(drop=True)
-
-    return data, IMDb_df_version
-
-# Load IMDb data
-IMDb_df, IMDb_df_version = load_data()
-
-# endregion
-
-# ===============================
-# region Archieve data
-# ===============================
-
-# Define load and cache archieve data
-@st.cache_data
-def load_data():
-    # Load the CSV file into a pandas DataFrame
-    data = pd.read_csv('archieve.csv', delimiter=',')
-    
-    archieve_df_version = pd.to_datetime(data.iloc[0, 0])
-
-    data = data.iloc[1:].reset_index(drop=True)
-
-    data['date'] = pd.to_datetime(data['date'], 
-                                  format='%Y-%m-%d %H:%M:%S')
-
-    data['cumulative_votes'] = data.groupby('room')['votes'].cumsum()
-    data['cumulative_win'] = data.groupby('room')['watched'].cumsum()
-
-    return data, archieve_df_version
-
-# Load archieve data
-archieve_df, archieve_df_version = load_data()
-
-# endregion
-
-# endregion
-
-# ===============================
-# region Initialize
-# ===============================
-if "rerun" not in st.session_state:
-    st.session_state.rerun = True
-
-# endregion
-
-# ===============================
 # region Home page
 # ===============================
 
@@ -397,15 +312,27 @@ st.title("Thursday Filmday :clapper::film_projector:")
 st.write("""
     Welcome to **Thursday Filmday**! :clapper:
 
-    This app is designed to enhance your movie night experience with three exciting sections:
+    This app is designed to enhance your movie night experience with three 
+         exciting sections:
 
-    1. **Movie Chooser**: This section helps you select the perfect film for your movie night. Whether you're in the mood for a comedy, drama, or action-packed thriller, the Movie Chooser will guide you to the best options.
+    1. **Movie Chooser**: This section helps you select the perfect film 
+         for your movie night. Whether you're in the mood for a comedy, 
+         drama, or action-packed thriller, the Movie Chooser will guide 
+         you to the best options.
 
-    2. **Movie Stats**: Dive into some fun statistics about all the movies we've watched together. Discover interesting trends, favorite genres, and more. It's a great way to see our collective movie-watching habits!
+    2. **Movie Stats**: Dive into some fun statistics about all the movies 
+         we've watched together. Discover interesting trends, favorite 
+         genres, and more. It's a great way to see our collective 
+         movie-watching habits!
 
-    3. **Film Archive**: Here, you can browse through a comprehensive list of all the films we've watched and suggested. It's a handy reference to revisit past favorites or find new recommendations.
+    3. **Film Archive**: Here, you can browse through a comprehensive list 
+         of all the films we've watched and suggested. It's a handy 
+         reference to revisit past favorites or find new recommendations.
 
-    I've also hidden some fun easter eggs throughout the app for you to discover. I put a lot of effort into creating this page, so I hope you enjoy it. Please be gentle, as the app might not be the most efficient in the world.
+    I've also hidden some fun easter eggs throughout the app for you to 
+         discover. I put a lot of effort into creating this page, so I 
+         hope you enjoy it. Please be gentle, as the app might not be the 
+         most efficient in the world.
 
     Enjoy your movie night and happy watching! :popcorn:
     """)
