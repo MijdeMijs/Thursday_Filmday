@@ -1260,7 +1260,7 @@ def plot_winners_over_time(df, theme):
 
     # Scatter plot with connecting lines per group using rainbow colors
     for color, (key, grp) in zip(colors, df.groupby(['room'])):
-        ax.plot(grp['date'], grp['cumulative_win'], marker='o', linestyle='-',
+        ax.plot(grp['date'], grp['cumulative_win'], marker='', linestyle='-',
                 markersize=4, label=key, color=color)
 
     # Set labels and title
@@ -1355,7 +1355,7 @@ def plot_votes_per_room(df, theme):
         ax.text(bar.get_x() + bar.get_width()/2, yval + 1, int(yval), ha='center', va='bottom', fontsize=14)
 
     # Set the y-axis limit to be 5 higher than the highest bar
-    ax.set_ylim(0, votes_per_room.max() + 5)
+    ax.set_ylim(0, votes_per_room.max() + 10)
 
     return fig
 
@@ -1391,7 +1391,7 @@ def plot_votes_over_time(df, theme):
 
     # Scatter plot with connecting lines per group using rainbow colors
     for color, (key, grp) in zip(colors, df.groupby(['room'])):
-        ax.plot(grp['date'], grp['cumulative_votes'], marker='o', linestyle='-',
+        ax.plot(grp['date'], grp['cumulative_votes'], marker='', linestyle='-',
                 markersize=4, label=key, color=color)
 
     # Set labels and title
@@ -1450,13 +1450,22 @@ st.write(f'''
          (sd={archieve_df['averageRating'].std().round(2)})**.
         ''')
 
-@st.cache_data
-def plot_IMDb_rating_suggested_room(df, theme):
-
-    force_recache = theme
+# @st.cache_data
+def plot_IMDb_rating_suggested_room(df, theme_col):
+    if theme_col == 'dark':
+        colour = '#696969'
+        x_col = '#696969'
+        fier_col = 'red'
+    else:
+        colour = 'black'
+        x_col = 'black'        
+        fier_col = 'orange'
 
     # Group by room and get average ratings
     grouped_data = [df[df['room'] == room]['averageRating'].dropna().values for room in sorted(df['room'].unique())]
+
+    # Flier properties to set outlier color
+    # flierprops = dict(marker='o', color=fier_col)
 
     # Plot a boxplot with the specified style
     fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
@@ -1466,21 +1475,25 @@ def plot_IMDb_rating_suggested_room(df, theme):
     colors = plt.cm.rainbow(np.linspace(0, 1, len(grouped_data)))
     for patch, color in zip(box['boxes'], colors):
         patch.set_facecolor(color)
-        patch.set_edgecolor('black')
+        patch.set_edgecolor(colour)
 
     # Set the whisker and cap colors to black
     for whisker in box['whiskers']:
-        whisker.set_color('black')
+        whisker.set_color(colour)
     for cap in box['caps']:
-        cap.set_color('black')
+        cap.set_color(colour)
 
     # Set the median line color to black
     for median in box['medians']:
-        median.set_color('black')
+        median.set_color(x_col)
+
+    # Set the outlier (flier) color
+    for flier in box['fliers']:
+        flier.set(marker='o', color=fier_col, alpha=0.7)
 
     # Add mean as a small x
     means = [np.mean(group) for group in grouped_data]
-    ax.scatter(range(1, len(means) + 1), means, color='black', marker='x', s=100, zorder=3)
+    ax.scatter(range(1, len(means) + 1), means, color=x_col, marker='x', s=100, zorder=3)
 
     # Add sample size per group on y=9.75
     sample_sizes = [len(group) for group in grouped_data]
@@ -1498,35 +1511,51 @@ def plot_IMDb_rating_suggested_room(df, theme):
     return fig, grouped_data
 
 # Call the function and cache the result
-fig_5, grouped_data = plot_IMDb_rating_suggested_room(watched_df, theme)
+fig_5, grouped_data = plot_IMDb_rating_suggested_room(watched_df, theme_col)
 
 # Display the plot in Streamlit
 st.pyplot(fig_5)
 
-# Define the names
-names = ["Alternative", "Room 1", "Room 2", "Room 3", "Room 4", "Room 5"]
+st.write(theme_col)
 
-# Create a dictionary with names as keys and arrays as values
-named_arrays = {name: arr for name, arr in zip(names, grouped_data)}
+@st.cache_data
+def IMDb_rating_ratio(grouped_data):
+    # Define the names
+    names = ["Alternative", "Room 1", "Room 2", "Room 3", "Room 4", "Room 5"]
 
-# Calculate the mean/size ratio for each group
-ratios = {name: np.mean(arr) / watched_df['averageRating'].mean() for name, arr in named_arrays.items()}
+    # Create a dictionary with names as keys and arrays as values
+    named_arrays = {name: arr for name, arr in zip(names, grouped_data)}
+
+    # Your original ratios dictionary
+    ratios = {name: np.mean(arr) / watched_df['averageRating'].mean() for name, arr in named_arrays.items()}
+
+    # Calculate min and max values
+    min_val = min(ratios.values())
+    max_val = max(ratios.values())
+
+    # Apply min-max normalization
+    scaled_ratios = {name: (value - min_val) / (max_val - min_val) for name, value in ratios.items()}
+
+    return scaled_ratios
+
+scaled_ratios = IMDb_rating_ratio(grouped_data)    
 
 # Assign the ratios to individual variables
-Alternative = ratios["Alternative"]
-ratio_1 = ratios["Room 1"].round(3)
-ratio_2 = ratios["Room 2"].round(3)
-ratio_3 = ratios["Room 3"].round(3)
-ratio_4 = ratios["Room 4"].round(3)
-ratio_5 = ratios["Room 5"].round(3)
+Alternative = scaled_ratios["Alternative"]
+ratio_1 = scaled_ratios["Room 1"].round(3)
+ratio_2 = scaled_ratios["Room 2"].round(3)
+ratio_3 = scaled_ratios["Room 3"].round(3)
+ratio_4 = scaled_ratios["Room 4"].round(3)
+ratio_5 = scaled_ratios["Room 5"].round(3)
 
 st.write(f'''
-         Let's check the **average room IMDb rating/average watched film IMDb rating 
-         ratio**! If you're ratio is high, this means that you generally have high 
-         quality contributions. If you're ratio is low, you've got to train you're taste!
-         Rooms below 1.0 contrubute below average quality films, while rooms above 1.0 
-         contrubute above average quality films. Maybe consider voting on someone else 
-         next time?
+         Let's check the **normalized average room IMDb rating/average watched film IMDb 
+         rating ratio**! If your ratio is high, it means you generally contribute 
+         high-quality films. If your ratio is low, you might need to refine your taste!
+         With a value of 0.5, you're just an average bloke. Unworthy of a special 
+         mentioning. Rooms with ratios below 0.5 contribute below-average quality films, 
+         while rooms with ratios above 0.5 contribute above-average quality films. Maybe 
+         consider voting on someone else next time?
 
          - Room 1: **{ratio_1}**
          - Room 2: **{ratio_2}**
