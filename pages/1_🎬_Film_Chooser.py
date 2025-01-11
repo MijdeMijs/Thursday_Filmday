@@ -2,15 +2,10 @@
 # region Imports
 # ===============================
 import streamlit as st
-from streamlit_theme import st_theme
-import numpy as np
 import pandas as pd
 import time
 from datetime import datetime
 import gzip
-import random
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 
 # endregion
 

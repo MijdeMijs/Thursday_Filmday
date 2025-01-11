@@ -1500,8 +1500,6 @@ fig_5, grouped_data = plot_IMDb_rating_suggested_room(watched_df)
 # Display the plot in Streamlit
 st.pyplot(fig_5)
 
-st.write(theme_col)
-
 @st.cache_data
 def IMDb_rating_ratio(grouped_data):
     # Define the names
