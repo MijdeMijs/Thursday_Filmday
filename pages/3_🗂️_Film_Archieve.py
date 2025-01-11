@@ -50,7 +50,7 @@ archieve_df, archieve_df_version = load_data()
 # region Archive intoduction
 # ===============================
 
-st.header("Film Archive", divider="rainbow")
+st.header(" :card_index_dividers: Film Archive", divider="rainbow")
 
 st.write('''The Film Archive is a comprehensive hub where you can revisit all the films 
          we’ve enjoyed together. It lets you see which room suggested each film, track 

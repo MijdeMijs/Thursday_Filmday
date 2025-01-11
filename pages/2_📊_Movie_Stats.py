@@ -82,7 +82,7 @@ plt.rcParams['axes.edgecolor'] = bordercolor
 # ===============================
 # region Movie Stats
 # ===============================
-st.header("Movie Stats", divider="rainbow")
+st.header(":bar_chart: Movie Stats", divider="rainbow")
 
 # ===============================
 # region General values
