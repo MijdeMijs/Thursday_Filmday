@@ -12,6 +12,44 @@ import random
 # endregion
 
 # ===============================
+# region Cookie pop-up
+# ===============================
+
+# Check if pop-up has been shown
+if "modal_shown" not in st.session_state:
+   st.session_state.modal_shown = False
+
+# Show pop-up with buttons
+@st.dialog('Cookies!?')
+def show_modal():
+   st.write('**NEVER ALLOW COOKIES!** We don\'t need :cookie: or :cupcake:!!! We want MUFFINS!')
+   
+   gift = 'https://www.youtube.com/watch?v=kwgYSfqO0fg'
+   pop_up = ''
+
+   pop_up_col1, pop_up_col2, pop_up_col3 = st.columns([6, 6, 11])
+
+   with pop_up_col1:
+       if st.button("Bake a :cookie:"):
+           pop_up = "WHY!? Don\'t give your data!"
+
+   with pop_up_col2:
+       if st.button("Bake a :cupcake:"):
+           pop_up = 'DISSAPOINTMENT ACHIEVED!'
+
+   with pop_up_col3:
+       st.link_button(':gift:', gift)
+
+   st.write(f'**:red[{pop_up}]**')
+
+# Run pop-up and update session state
+if not st.session_state.modal_shown:
+   show_modal()
+   st.session_state.modal_shown = True
+
+# endregion
+
+# ===============================
 # region Little friends
 # ===============================
 

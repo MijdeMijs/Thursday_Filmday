@@ -319,16 +319,28 @@ st.write("""
          for your movie night. Whether you're in the mood for a comedy, 
          drama, or action-packed thriller, the Movie Chooser will guide 
          you to the best options.
+    """)
 
+st.page_link("pages/1_🎬_Film_Chooser.py", label="Film Chooser", icon="🎬")
+
+st.write("""
     2. **Movie Stats**: Dive into some fun statistics about all the movies 
          we've watched together. Discover interesting trends, favorite 
          genres, and more. It's a great way to see our collective 
          movie-watching habits!
+    """)
 
+st.page_link("pages/2_📊_Movie_Stats.py", label="Movie Stats", icon="📊")
+
+st.write("""
     3. **Film Archive**: Here, you can browse through a comprehensive list 
          of all the films we've watched and suggested. It's a handy 
          reference to revisit past favorites or find new recommendations.
+    """)
 
+st.page_link("pages/3_🗂️_Film_Archieve.py", label="Film Archieve", icon="🗂️")
+
+st.write("""
     I've also hidden some fun easter eggs throughout the app for you to 
          discover. I put a lot of effort into creating this page, so I 
          hope you enjoy it. Please be gentle, as the app might not be the 
