@@ -1066,10 +1066,6 @@ else:
 # ===============================
 st.header("Movie Stats", divider="rainbow")
 
-st.write(
-    f':red[This page is still under construction]'
-)
-
 # ===============================
 # region Matplotlib settings
 # ===============================
@@ -1116,10 +1112,37 @@ n_suggest_unique = archieve_df['primaryTitle'].nunique()
 n_votes = int(archieve_df['votes'].dropna().sum())
 n_canceled = int(archieve_df.groupby('date')['canceled'].max().sum())
 
-st.write(f'''In total, we've had **{n_nights} movie nights**! For these nights, 
-         **{n_suggest} films** where suggested of which **{n_suggest_unique} films** 
-         where unique films. Unfortunately,
-         we had to cancel **{n_canceled} movie nights**...''')
+st.write(f"""
+🎥✨ **Welcome to the Ultimate Movie Night Recap!** ✨🎥  
+
+Ladies and gentlemen, movie enthusiasts, and armchair critics, it’s time to dive into the drama, competition, and cinematic revelations of our movie night showdown. This page is your guide to everything that went down—from the nail-biting voting battles to the genre trends shaping our evenings. Let’s break it down:  
+
+---
+
+🏆 **[Winners](#winners)**: Who’s got the golden touch?  
+The rooms battled valiantly, vying for the ultimate prize: having their movie pick reign supreme. Some rooms emerged victorious with bold selections, while others struggled to get their voices heard. Whether you’re celebrating triumph or planning your next comeback strategy, this section reveals who’s on top!  
+
+🗳️ **[Votes](#number-of-votes)**: The popularity contest you didn’t know you were part of.  
+How many votes did each room rack up? Who’s the crowd favorite, and who might need to brush up on their campaign tactics? We explore the total and cumulative votes, offering a look at how the showdown unfolded over time.  
+
+⭐ **[IMDb Ratings](#imdb-ratings)**: Quality over quantity?  
+Here, we explore the ratings of the films we’ve watched and the suggestions that didn’t make the cut. Are your picks cinematic masterpieces or guilty pleasures? Plus, we throw in a fun ratio for each room—are you contributing above-average quality films or coasting on questionable taste?  
+
+⏱️ **[Film Duration](#film-duration)**: Short and snappy or long and epic?  
+Do the chosen movies reflect an affinity for breezy watch-times or a love for sprawling sagas? This section unpacks the runtimes of both selected films and those that were merely suggestions.  
+
+🎭 **[Genres](#genres)**: A colorful glimpse into our preferences.  
+Finally, we analyze the genres that made it to movie night. From high-octane action to introspective drama, we’ve dabbled in it all—but which genres dominate, and which are waiting for their turn?  
+
+---
+
+In total, we've had **{n_nights} movie nights**! We suggested **{n_suggest} films** of 
+which **{n_suggest_unique} films** where unique suggestions. Unfortunately, we had to 
+cancel **{n_canceled} movie nights**...
+""")
+
+
+st.write(f'''''')
 
 # endregion
 
@@ -1157,7 +1180,8 @@ st.write(f"""
          lobbying. Either way, they're the reigning champs—*bow down to their cinematic
          wisdom!*
 
-         - 🍿 **{room_2}** came in hot with **{int(sorted_n_winner[1])} wins**, just one shy of Room 2. Close, but 
+         - 🍿 **{room_2}** came in hot with **{int(sorted_n_winner[1])} wins**, just 
+         {int(sorted_n_winner[0]-sorted_n_winner[1])} shy of Room 2. Close, but 
          no popcorn. Maybe next time they’ll add a little extra butter to their choices 
          to push them to the top.
 
@@ -1287,7 +1311,7 @@ room_6_vote = rooms_sorted_votes_per_room[5]
 st.subheader('Number of votes', divider='violet')
 
 st.write(f"""
-🗳️✨ **Let’s talk about votes, baby!** ✨🗳️
+🗳️✨ **Let’s talk about votes, babygirl!** ✨🗳️
 
 A total of **{n_votes} votes** where given! In the first figure, we see **{room_1_vote}** 
 flexing its popularity muscles with 
@@ -1399,10 +1423,28 @@ st.write(f'''**Moral of the story:** {room_1_vote}’s the crowd-pleaser, and
 
 # endregion
 
+# ===============================
+# region IMDb ratings
+# ===============================
+
 st.subheader('IMDb ratings', divider='violet')
 
-st.write(f'''We have watched films from **{n_unique_genres} different main genres**.
-         What do you think? Are we drama queens :crown: or anime nerds :nerd_face: ???''')
+st.write(f'''
+         **IMDb Ratings Overview** 🎥✨ 
+         
+         The first plot shows the IMDb ratings of the films that were ultimately chosen 
+         for movie night. Each room's choices are represented, along with how their 
+         selections stack up in terms of quality (according to IMDb, of course!). The 
+         spread, average, and range of ratings provide a glimpse into the kind of films 
+         each room tends to champion—whether they're blockbusters, cult classics, or 
+         hidden gems.
+
+         On average, the films that we watched together had an **IMDb rating of 
+         {watched_df['averageRating'].mean().round(2)} 
+         (sd={watched_df['averageRating'].std().round(2)})**. The IMDb rating average of all
+         suggested films was **{archieve_df['averageRating'].mean().round(2)}
+         (sd={archieve_df['averageRating'].std().round(2)})**.
+        ''')
 
 @st.cache_data
 def plot_IMDb_rating_suggested_room(df, theme):
@@ -1457,6 +1499,48 @@ fig_5, grouped_data = plot_IMDb_rating_suggested_room(watched_df, theme)
 # Display the plot in Streamlit
 st.pyplot(fig_5)
 
+# Define the names
+names = ["Alternative", "Room 1", "Room 2", "Room 3", "Room 4", "Room 5"]
+
+# Create a dictionary with names as keys and arrays as values
+named_arrays = {name: arr for name, arr in zip(names, grouped_data)}
+
+# Calculate the mean/size ratio for each group
+ratios = {name: np.mean(arr) / watched_df['averageRating'].mean() for name, arr in named_arrays.items()}
+
+# Assign the ratios to individual variables
+Alternative = ratios["Alternative"]
+ratio_1 = ratios["Room 1"].round(3)
+ratio_2 = ratios["Room 2"].round(3)
+ratio_3 = ratios["Room 3"].round(3)
+ratio_4 = ratios["Room 4"].round(3)
+ratio_5 = ratios["Room 5"].round(3)
+
+st.write(f'''
+         Let's check the **average room IMDb rating/average watched film IMDb rating 
+         ratio**! If you're ratio is high, this means that you generally have high 
+         quality contributions. If you're ratio is low, you've got to train you're taste!
+         Rooms below 1.0 contrubute below average quality films, while rooms above 1.0 
+         contrubute above average quality films. Maybe consider voting on someone else 
+         next time?
+
+         - Room 1: **{ratio_1}**
+         - Room 2: **{ratio_2}**
+         - Room 3: **{ratio_3}**
+         - Room 4: **{ratio_4}**
+         - Room 5: **{ratio_5}**
+
+         <p><span style='font-size:13px;'>Notice! Beware of selection bias! Rooms with a 
+         low number of wins might have an unusually high or low ratio due to limited 
+         data.</span>
+         
+         The second plot shifts focus to the suggested films—many of which didn’t quite 
+         make the cut. It’s a behind-the-scenes look at what each room brought to the 
+         table. From here, we can see the range of ideas: some rooms stick to high-rated, 
+         critically acclaimed movies, while others might be a bit more adventurous 
+         (or chaotic) in their picks.
+        ''', unsafe_allow_html=True)
+
 @st.cache_data
 def plot_IMDb_rating_room(df, theme):
 
@@ -1510,6 +1594,31 @@ fig_6, grouped_data = plot_IMDb_rating_room(archieve_df, theme)
 # Display the plot in Streamlit
 st.pyplot(fig_6)
 
+st.write(f'''Together, these plots show how the chosen films compare to the broader 
+         pool of suggestions. It’s an ongoing story—dynamic and ever-changing as more 
+         movie nights unfold! Whether the IMDb ratings go up, down, or stay steady, 
+         every movie pick adds a new twist to the tale.
+        ''')
+
+# endregion 
+
+# ===============================
+# region Film duration
+# ===============================
+
+st.subheader('Film duration', divider='violet')
+
+st.write(f'''
+         **Movie Duration Analysis** ⏱️✨
+
+         The first plot highlights the runtime (in minutes) of the movies that made it 
+         to movie night. Each room’s chosen films are represented, showing whether they 
+         prefer snappy, fast-paced stories or long, immersive epics. The average 
+         runtimes and spreads hint at each room's movie-night vibe. The average film we
+         watched had a duration of **{archieve_df['runtimeMinutes'].mean().round(2)} 
+         minutes**.
+         ''')
+
 @st.cache_data
 def plot_IMDb_duration_room(df, theme):
 
@@ -1545,9 +1654,9 @@ def plot_IMDb_duration_room(df, theme):
     # Add sample size per group on y=182
     sample_sizes = [len(group) for group in grouped_data]
     for i, size in enumerate(sample_sizes):
-        ax.text(i + 1, 182, f'n={size}', ha='center', va='center', fontsize=12)
+        ax.text(i + 1, (df['runtimeMinutes'].max()+4), f'n={size}', ha='center', va='center', fontsize=12)
 
-    ax.set_ylabel('IMDb rating', fontsize=14)
+    ax.set_ylabel('Duration (minutes)', fontsize=14)
     ax.set_xticklabels(sorted(df['room'].unique()), rotation=0, fontsize=14)
 
     ax.set_ylim((df['runtimeMinutes'].min()-10), (df['runtimeMinutes'].max()+10))
@@ -1562,6 +1671,12 @@ fig_7, grouped_data = plot_IMDb_duration_room(watched_df, theme)
 
 # Display the plot in Streamlit
 st.pyplot(fig_7)
+
+st.write(f'''The second plot digs into the runtimes of all the suggested films—whether 
+         they were chosen or not. Here, we get a broader sense of what each room 
+         brought forward. Some rooms might aim for epic sagas with towering runtimes, 
+         while others pitch films that fit neatly into a busy evening schedule.
+        ''')
 
 @st.cache_data
 def plot_IMDb_duration_suggested_room(df, theme):
@@ -1598,9 +1713,9 @@ def plot_IMDb_duration_suggested_room(df, theme):
     # Add sample size per group on y=9.75
     sample_sizes = [len(group) for group in grouped_data]
     for i, size in enumerate(sample_sizes):
-        ax.text(i + 1, 182, f'n={size}', ha='center', va='center', fontsize=12)
+        ax.text(i + 1, (df['runtimeMinutes'].max()+4), f'n={size}', ha='center', va='center', fontsize=12)
 
-    ax.set_ylabel('IMDb rating', fontsize=14)
+    ax.set_ylabel('Duration (minutes)', fontsize=14)
     ax.set_xticklabels(sorted(df['room'].unique()), rotation=0, fontsize=14)
 
     ax.set_ylim((df['runtimeMinutes'].min()-10), (df['runtimeMinutes'].max()+10))
@@ -1616,10 +1731,35 @@ fig_8, grouped_data = plot_IMDb_duration_suggested_room(archieve_df, theme)
 # Display the plot in Streamlit
 st.pyplot(fig_8)
 
+st.write(f'''Together, these visuals reveal a lot about each room’s cinematic style. 
+         Whether your picks skew longer or shorter, every suggestion adds to the 
+         tapestry of movie night fun—and who knows what the next selection will bring?
+         ''')
+
+# endregion 
+
+# ===============================
+# region Genres
+# ===============================
+
 st.subheader('Genres', divider='violet')
 
-st.write(f'''We have watched films from **{n_unique_genres} different main genres**.
-         What do you think? Are we drama queens :crown: or anime nerds :nerd_face: ???''') 
+st.write(f'''
+         **Genres Galore** 🎥🎭
+
+         Take a look at this colorful breakdown of the genres we’ve tackled on movie nights. 
+         We’ve dipped our toes into all kinds of cinematic waters, from high-energy thrillers 
+         to heartfelt tearjerkers—and everything in between.
+
+         It’s clear we’ve got a soft spot for certain genres, while others have been left 
+         standing awkwardly in the corner, waiting for their moment to shine. Maybe they’re 
+         just “acquired tastes”?
+
+         Whatever the case, our genre selection shows we’re a diverse bunch—sometimes 
+         action-packed, sometimes introspective, and occasionally downright silly. The real 
+         question is: what’s next? Are we diving into high drama, or will we surprise everyone 
+         with something completely offbeat? Stay tuned!
+         ''') 
 
 @st.cache_data
 def plot_n_genres(df, theme):
@@ -1659,6 +1799,15 @@ fig_7 = plot_n_genres(watched_df, theme)
 st.pyplot(fig_7)
 
 # endregion
+
+st.divider()
+
+st.write(f'''✨ **In Conclusion**:  
+        Every movie night is a blend of strategy, taste, and a sprinkle of luck. 
+         Whether you’re basking in victory or plotting your next move, the stats and 
+         visuals here give you all the tools to stay in the game. So, are you ready for 
+         the next showdown? Let the movie magic continue! 🍿
+        ''')
 
 # endregion
 
