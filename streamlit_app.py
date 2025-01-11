@@ -10,19 +10,13 @@ from datetime import datetime
 import gzip
 import random
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 # endregion
 
 # ===============================
 # region Get theme
 # ===============================
-
-# if list(st_theme())[4] == 'light':
-#     theme = 'light'
-#     st.write('light thingy')
-# else:
-#     theme = 'dark'
-#     st.write('dark thingy')
 
 theme = st_theme()
 
@@ -369,6 +363,7 @@ def load_data():
                                   format='%Y-%m-%d %H:%M:%S')
 
     data['cumulative_votes'] = data.groupby('room')['votes'].cumsum()
+    data['cumulative_win'] = data.groupby('room')['watched'].cumsum()
 
     return data, archieve_df_version
 
@@ -1129,22 +1124,66 @@ st.write(f'''In total, we've had **{n_nights} movie nights**! For these nights,
 # endregion
 
 # ===============================
-# region Votes per Room plot
+# region Winners
 # ===============================
+
+n_winner = watched_df.groupby('room')['watched'].sum()
+
+# Sort the result from max to min
+sorted_n_winner = n_winner.sort_values(ascending=False)
+
+# Get the names of the rooms from max to min
+rooms_sorted = sorted_n_winner.index.tolist()
+
+# Assign them to their own objects
+room_1 = rooms_sorted[0]
+room_2 = rooms_sorted[1]
+room_3 = rooms_sorted[2]
+room_4 = rooms_sorted[3]
+room_5 = rooms_sorted[4]
+room_6 = rooms_sorted[5]
 
 st.subheader('Winners', divider='violet')
 
-st.write(f'''Ever wondered who won the movie choice the most times!? Here you can see it!
-         And? Like the result? :first_place_medal:''')    
+st.write(f"""
+         🎥✨ **Ladies and gentlemen, welcome to the Great Movie Night Suggestion 
+         Showdown!** ✨🎥
+
+         In this heated competition, the rooms battled it out to see who could win the 
+         most movie choices for film night. Let’s break it down:
+
+         - 🏆 **{room_1}** took the crown with a whopping **{int(sorted_n_winner[0])} wins**! Clearly, this room 
+         has the golden taste in movies, or maybe they’ve mastered the art of sneaky 
+         lobbying. Either way, they're the reigning champs—*bow down to their cinematic
+         wisdom!*
+
+         - 🍿 **{room_2}** came in hot with **{int(sorted_n_winner[1])} wins**, just one shy of Room 2. Close, but 
+         no popcorn. Maybe next time they’ll add a little extra butter to their choices 
+         to push them to the top.
+
+         - 🎭 **{room_3}** was solidly middle-of-the-pack with **{int(sorted_n_winner[2])} wins**. Not too shabby, 
+         but it seems they might need to up their game to catch the big players. 
+         *More rom-coms? Maybe fewer “artsy” films?*
+
+         - 🎬 **{room_4}** clocked in with **{int(sorted_n_winner[3])} wins**, which is… respectable. But hey, 
+         {room_4}, maybe try something bold next time—*like picking a movie that wasn’t 
+         released 20 years ago.*
+
+         - 💯 **{room_5}**, with just **{int(sorted_n_winner[4])} wins**. Ouch. Did your movie picks even make it 
+         out of the suggestion phase? Did you try recommending **:red["Spy"]** every week? Don’t worry—*underdogs make for the best comeback stories!*
+
+         - ❓ As for the mysterious **“Alternative”** category with its lonely 
+         **{int(sorted_n_winner[5])} win**—it’s basically the referee stepping in with a “let’s just watch 
+         something else entirely!” Or was it a team effort?
+
+         So there you have it—**{room_1}** is the ultimate movie-picking mastermind!
+        """)    
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
-def plot_n_winner(df, theme):
+def plot_n_winner(df, n_winner, theme):
 
     force_recache = theme
-
-    # Sum the votes per room
-    n_winner = df.groupby('room')['watched'].sum()
 
     # Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
     fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
@@ -1170,15 +1209,95 @@ def plot_n_winner(df, theme):
     return fig
 
 # Call the function and cache the result
-fig_1 = plot_n_winner(archieve_df, theme)
+fig_1 = plot_n_winner(archieve_df, n_winner, theme)
 
 # Display the plot in Streamlit
-st.pyplot(fig_1)
+st.pyplot(fig_1)        
+
+st.divider()
+
+@st.cache_data
+def plot_winners_over_time(df, theme):
+
+    force_recache = theme
+
+    # Plotting
+    fig, ax = plt.subplots()
+
+    # Get the unique groups
+    groups = df['room'].unique()
+
+    # Generate rainbow colors for the groups
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(groups)))
+
+    # Scatter plot with connecting lines per group using rainbow colors
+    for color, (key, grp) in zip(colors, df.groupby(['room'])):
+        ax.plot(grp['date'], grp['cumulative_win'], marker='o', linestyle='-',
+                markersize=4, label=key, color=color)
+
+    # Set labels and title
+    ax.set_ylabel('Cumulative wins')
+
+    # Set y-axis to show no decimals
+    ax.yaxis.get_major_locator().set_params(integer=True)
+    
+    # Rotate x-axis labels to format dates
+    ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%b %d, %Y'))
+
+    # Show one tick on the first of the month
+    ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[2, 5, 8, 11]))
+    ax.xaxis.set_minor_locator(plt.matplotlib.dates.DayLocator(bymonthday=1))
+
+    # Align the dates on x-axis to make the year line up with the tick
+    fig.autofmt_xdate()
+
+    # Show legend
+    plt.legend(title='Room', fontsize=9)
+
+    return fig
+
+# Call the function and cache the result
+fig_2 = plot_winners_over_time(archieve_df, theme)
+
+# Display the plot in Streamlit
+st.pyplot(fig_2)
+
+# endregion
+
+# ===============================
+# region Votes
+# ===============================
+
+votes_per_room = archieve_df.groupby('room')['votes'].sum()
+
+# Sort the result from max to min
+sorted_votes_per_room = votes_per_room.sort_values(ascending=False)
+
+# Get the names of the rooms from max to min
+rooms_sorted_votes_per_room = sorted_votes_per_room.index.tolist()
+
+# Assign them to their own objects
+room_1_vote = rooms_sorted_votes_per_room[0]
+room_2_vote = rooms_sorted_votes_per_room[1]
+room_3_vote = rooms_sorted_votes_per_room[2]
+room_4_vote = rooms_sorted_votes_per_room[3]
+room_5_vote = rooms_sorted_votes_per_room[4]
+room_6_vote = rooms_sorted_votes_per_room[5]
 
 st.subheader('Number of votes', divider='violet')
 
-st.write(f'''A total of **{n_votes} votes** where given! Top :thumbsup:! These are the 
-        votes that where given per room.''')         
+st.write(f"""
+🗳️✨ **Let’s talk about votes, baby!** ✨🗳️
+
+A total of **{n_votes} votes** where given! In the first figure, we see **{room_1_vote}** 
+flexing its popularity muscles with 
+**{int(sorted_votes_per_room[0])} total votes**—an undeniable fan favorite! 
+**{room_2_vote}** and **{room_3_vote}** also put up a decent fight with 
+**{int(sorted_votes_per_room[1])}** and **{int(sorted_votes_per_room[2])} votes**, 
+respectively. Meanwhile, **{room_4_vote}** brought a modest 
+**{int(sorted_votes_per_room[3])} votes** to the table. (*Do we need to send out 
+a motivational speech, {room_5_vote}?*)
+""")
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
@@ -1213,15 +1332,20 @@ def plot_votes_per_room(df, theme):
     return fig
 
 # Call the function and cache the result
-fig_2 = plot_votes_per_room(archieve_df, theme)
+fig_3 = plot_votes_per_room(archieve_df, theme)
 
 # Display the plot in Streamlit
-st.pyplot(fig_2)
+st.pyplot(fig_3)
 
 st.divider()
 
-st.write(f'''These are the cumulative votes that where recieved per room. Which 
-         room is the most popular :star: !?''')
+st.write(f'''The second figure takes us on a journey through time as the cumulative votes 
+         pile up. **{room_1_vote}’s** rise to the top was steady and strong—like a 
+         blockbuster climbing the box office charts. **{room_2_vote}** made a valiant 
+         effort to keep up, but ultimately fell behind. And **{room_5_vote}**… well, 
+         let’s just say their graph looks more like a gentle slope than a steep climb. 
+         *Baby steps, right?*
+        ''')
 
 @st.cache_data
 def plot_votes_over_time(df, theme):
@@ -1240,7 +1364,7 @@ def plot_votes_over_time(df, theme):
     # Scatter plot with connecting lines per group using rainbow colors
     for color, (key, grp) in zip(colors, df.groupby(['room'])):
         ax.plot(grp['date'], grp['cumulative_votes'], marker='o', linestyle='-',
-                label=key, color=color)
+                markersize=4, label=key, color=color)
 
     # Set labels and title
     ax.set_ylabel('Cumulative votes')
@@ -1252,22 +1376,139 @@ def plot_votes_over_time(df, theme):
     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%b %d, %Y'))
 
     # Show one tick on the first of the month
-    ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator())
+    ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[2, 5, 8, 11]))
     ax.xaxis.set_minor_locator(plt.matplotlib.dates.DayLocator(bymonthday=1))
 
     # Align the dates on x-axis to make the year line up with the tick
     fig.autofmt_xdate()
 
     # Show legend
-    plt.legend(title='Room')
+    plt.legend(title='Room', fontsize=9)
 
     return fig
 
 # Call the function and cache the result
-fig_3 = plot_votes_over_time(archieve_df, theme)
+fig_4 = plot_votes_over_time(archieve_df, theme)
 
 # Display the plot in Streamlit
-st.pyplot(fig_3)
+st.pyplot(fig_4)
+
+st.write(f'''**Moral of the story:** {room_1_vote}’s the crowd-pleaser, and 
+         {room_5_vote}’s got some catching up to do! 🚀
+        ''')
+
+# endregion
+
+st.subheader('IMDb ratings', divider='violet')
+
+st.write(f'''We have watched films from **{n_unique_genres} different main genres**.
+         What do you think? Are we drama queens :crown: or anime nerds :nerd_face: ???''')
+
+@st.cache_data
+def plot_IMDb_rating_room(df, theme):
+
+    force_recache = theme
+
+    # Group by room and get average ratings
+    grouped_data = [df[df['room'] == room]['averageRating'].dropna().values for room in sorted(df['room'].unique())]
+
+    # Plot a boxplot with the specified style
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
+    box = ax.boxplot(grouped_data, patch_artist=True)
+
+    # Set the box colors to rainbow with black borders
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(grouped_data)))
+    for patch, color in zip(box['boxes'], colors):
+        patch.set_facecolor(color)
+        patch.set_edgecolor('black')
+
+    # Set the whisker and cap colors to black
+    for whisker in box['whiskers']:
+        whisker.set_color('black')
+    for cap in box['caps']:
+        cap.set_color('black')
+
+    # Set the median line color to black
+    for median in box['medians']:
+        median.set_color('black')
+
+    # Add mean as a small x
+    means = [np.mean(group) for group in grouped_data]
+    ax.scatter(range(1, len(means) + 1), means, color='black', marker='x', s=100, zorder=3)
+
+    # Add sample size per group on y=9.75
+    sample_sizes = [len(group) for group in grouped_data]
+    for i, size in enumerate(sample_sizes):
+        ax.text(i + 1, 9.75, f'n={size}', ha='center', va='center', fontsize=12)
+
+    ax.set_ylabel('IMDb rating', fontsize=14)
+    ax.set_xticklabels(sorted(df['room'].unique()), rotation=0, fontsize=14)
+
+    ax.set_ylim((df['averageRating'].min()-(10-df['averageRating'].max())), 10)
+
+    # Remove x-axis label
+    ax.set_xlabel('')
+
+    return fig, grouped_data
+
+# Call the function and cache the result
+fig_5, grouped_data = plot_IMDb_rating_room(watched_df, theme)
+
+# Display the plot in Streamlit
+st.pyplot(fig_5)
+
+@st.cache_data
+def plot_IMDb_rating_room(df, theme):
+
+    force_recache = theme
+
+    # Group by room and get average ratings
+    grouped_data = [df[df['room'] == room]['averageRating'].dropna().values for room in sorted(df['room'].unique())]
+
+    # Plot a boxplot with the specified style
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
+    box = ax.boxplot(grouped_data, patch_artist=True)
+
+    # Set the box colors to rainbow with black borders
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(grouped_data)))
+    for patch, color in zip(box['boxes'], colors):
+        patch.set_facecolor(color)
+        patch.set_edgecolor('black')
+
+    # Set the whisker and cap colors to black
+    for whisker in box['whiskers']:
+        whisker.set_color('black')
+    for cap in box['caps']:
+        cap.set_color('black')
+
+    # Set the median line color to black
+    for median in box['medians']:
+        median.set_color('black')
+
+    # Add mean as a small x
+    means = [np.mean(group) for group in grouped_data]
+    ax.scatter(range(1, len(means) + 1), means, color='black', marker='x', s=100, zorder=3)
+
+    # Add sample size per group on y=9.75
+    sample_sizes = [len(group) for group in grouped_data]
+    for i, size in enumerate(sample_sizes):
+        ax.text(i + 1, 9.75, f'n={size}', ha='center', va='center', fontsize=12)
+
+    ax.set_ylabel('IMDb rating', fontsize=14)
+    ax.set_xticklabels(sorted(df['room'].unique()), rotation=0, fontsize=14)
+
+    ax.set_ylim((df['averageRating'].min()-(10-df['averageRating'].max())), 10)
+
+    # Remove x-axis label
+    ax.set_xlabel('')
+
+    return fig, grouped_data
+
+# Call the function and cache the result
+fig_6, grouped_data = plot_IMDb_rating_room(archieve_df, theme)
+
+# Display the plot in Streamlit
+st.pyplot(fig_6)
 
 st.subheader('Genres', divider='violet')
 
@@ -1306,10 +1547,10 @@ def plot_n_genres(df, theme):
     return fig
 
 # Call the function and cache the result
-fig_4 = plot_n_genres(watched_df, theme)
+fig_7 = plot_n_genres(watched_df, theme)
 
 # Display the plot in Streamlit
-st.pyplot(fig_4)
+st.pyplot(fig_7)
 
 # endregion
 
