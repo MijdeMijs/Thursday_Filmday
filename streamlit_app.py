@@ -288,7 +288,7 @@ def show_popup_Escargot():
 
 # Function to randomly set show_popup to True
 def random_escargot():
-    if not st.session_state.show_escargot and random.random() < 0.05: # 5% chance to spawn Escargot the Snail
+    if not st.session_state.show_escargot and random.random() < 0.025: # 2.5% chance to spawn Escargot the Snail
         st.session_state.show_escargot = True
 
 # Call the function to potentially show the popup
@@ -1081,7 +1081,7 @@ if theme_col == 'light':
     bordercolor = 'black'
 elif theme_col == 'dark':
     facecolor = '#0e1117'
-    axcolor = '#333333'
+    axcolor = '#666666'
     textcolor = 'white'
     bordercolor = 'white'
 
@@ -1209,9 +1209,7 @@ st.write(f"""
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
-def plot_n_winner(df, n_winner, theme):
-
-    force_recache = theme
+def plot_n_winner(n_winner):
 
     # Plot a bar chart with rainbow bars, black borders, and medium grey background within the axis
     fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
@@ -1237,7 +1235,7 @@ def plot_n_winner(df, n_winner, theme):
     return fig
 
 # Call the function and cache the result
-fig_1 = plot_n_winner(archieve_df, n_winner, theme)
+fig_1 = plot_n_winner(n_winner)
 
 # Display the plot in Streamlit
 st.pyplot(fig_1)        
@@ -1245,9 +1243,7 @@ st.pyplot(fig_1)
 st.divider()
 
 @st.cache_data
-def plot_winners_over_time(df, theme):
-
-    force_recache = theme
+def plot_winners_over_time(df):
 
     # Plotting
     fig, ax = plt.subplots()
@@ -1285,7 +1281,7 @@ def plot_winners_over_time(df, theme):
     return fig
 
 # Call the function and cache the result
-fig_2 = plot_winners_over_time(archieve_df, theme)
+fig_2 = plot_winners_over_time(archieve_df)
 
 # Display the plot in Streamlit
 st.pyplot(fig_2)
@@ -1329,9 +1325,7 @@ a motivational speech, {room_5_vote}?*)
 
 # Function to sum the votes per room and plot the bar chart
 @st.cache_data
-def plot_votes_per_room(df, theme):
-
-    force_recache = theme
+def plot_votes_per_room(df):
 
     # Sum the votes per room
     votes_per_room = df.groupby('room')['votes'].sum()
@@ -1360,7 +1354,7 @@ def plot_votes_per_room(df, theme):
     return fig
 
 # Call the function and cache the result
-fig_3 = plot_votes_per_room(archieve_df, theme)
+fig_3 = plot_votes_per_room(archieve_df)
 
 # Display the plot in Streamlit
 st.pyplot(fig_3)
@@ -1376,9 +1370,7 @@ st.write(f'''The second figure takes us on a journey through time as the cumulat
         ''')
 
 @st.cache_data
-def plot_votes_over_time(df, theme):
-
-    force_recache = theme
+def plot_votes_over_time(df):
 
     # Plotting
     fig, ax = plt.subplots()
@@ -1416,7 +1408,7 @@ def plot_votes_over_time(df, theme):
     return fig
 
 # Call the function and cache the result
-fig_4 = plot_votes_over_time(archieve_df, theme)
+fig_4 = plot_votes_over_time(archieve_df)
 
 # Display the plot in Streamlit
 st.pyplot(fig_4)
@@ -1450,50 +1442,42 @@ st.write(f'''
          (sd={archieve_df['averageRating'].std().round(2)})**.
         ''')
 
-# @st.cache_data
-def plot_IMDb_rating_suggested_room(df, theme_col):
-    if theme_col == 'dark':
-        colour = '#696969'
-        x_col = '#696969'
-        fier_col = 'red'
-    else:
-        colour = 'black'
-        x_col = 'black'        
-        fier_col = 'orange'
+@st.cache_data
+def plot_IMDb_rating_suggested_room(df):
 
     # Group by room and get average ratings
     grouped_data = [df[df['room'] == room]['averageRating'].dropna().values for room in sorted(df['room'].unique())]
 
     # Flier properties to set outlier color
-    # flierprops = dict(marker='o', color=fier_col)
+    flierprops = dict(marker='o', color='red')
 
     # Plot a boxplot with the specified style
     fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
-    box = ax.boxplot(grouped_data, patch_artist=True)
+    box = ax.boxplot(grouped_data, patch_artist=True, flierprops=flierprops)
 
     # Set the box colors to rainbow with black borders
     colors = plt.cm.rainbow(np.linspace(0, 1, len(grouped_data)))
     for patch, color in zip(box['boxes'], colors):
         patch.set_facecolor(color)
-        patch.set_edgecolor(colour)
+        patch.set_edgecolor('black')
 
     # Set the whisker and cap colors to black
     for whisker in box['whiskers']:
-        whisker.set_color(colour)
+        whisker.set_color('black')
     for cap in box['caps']:
-        cap.set_color(colour)
+        cap.set_color('black')
 
     # Set the median line color to black
     for median in box['medians']:
-        median.set_color(x_col)
+        median.set_color('black')
 
     # Set the outlier (flier) color
-    for flier in box['fliers']:
-        flier.set(marker='o', color=fier_col, alpha=0.7)
+    # for flier in box['fliers']:
+    #     flier.set(marker='o', color='black')
 
     # Add mean as a small x
     means = [np.mean(group) for group in grouped_data]
-    ax.scatter(range(1, len(means) + 1), means, color=x_col, marker='x', s=100, zorder=3)
+    ax.scatter(range(1, len(means) + 1), means, color='black', marker='x', s=100, zorder=3)
 
     # Add sample size per group on y=9.75
     sample_sizes = [len(group) for group in grouped_data]
@@ -1511,7 +1495,7 @@ def plot_IMDb_rating_suggested_room(df, theme_col):
     return fig, grouped_data
 
 # Call the function and cache the result
-fig_5, grouped_data = plot_IMDb_rating_suggested_room(watched_df, theme_col)
+fig_5, grouped_data = plot_IMDb_rating_suggested_room(watched_df)
 
 # Display the plot in Streamlit
 st.pyplot(fig_5)
@@ -1575,9 +1559,7 @@ st.write(f'''
         ''', unsafe_allow_html=True)
 
 @st.cache_data
-def plot_IMDb_rating_room(df, theme):
-
-    force_recache = theme
+def plot_IMDb_rating_room(df):
 
     # Group by room and get average ratings
     grouped_data = [df[df['room'] == room]['averageRating'].dropna().values for room in sorted(df['room'].unique())]
@@ -1622,7 +1604,7 @@ def plot_IMDb_rating_room(df, theme):
     return fig, grouped_data
 
 # Call the function and cache the result
-fig_6, grouped_data = plot_IMDb_rating_room(archieve_df, theme)
+fig_6, grouped_data = plot_IMDb_rating_room(archieve_df)
 
 # Display the plot in Streamlit
 st.pyplot(fig_6)
@@ -1653,9 +1635,7 @@ st.write(f'''
          ''')
 
 @st.cache_data
-def plot_IMDb_duration_room(df, theme):
-
-    force_recache = theme
+def plot_IMDb_duration_room(df):
 
     # Group by room and get average ratings
     grouped_data = [df[df['room'] == room]['runtimeMinutes'].dropna().values for room in sorted(df['room'].unique())]
@@ -1700,7 +1680,7 @@ def plot_IMDb_duration_room(df, theme):
     return fig, grouped_data
 
 # Call the function and cache the result
-fig_7, grouped_data = plot_IMDb_duration_room(watched_df, theme)
+fig_7, grouped_data = plot_IMDb_duration_room(watched_df)
 
 # Display the plot in Streamlit
 st.pyplot(fig_7)
@@ -1712,9 +1692,7 @@ st.write(f'''The second plot digs into the runtimes of all the suggested filmsâ€
         ''')
 
 @st.cache_data
-def plot_IMDb_duration_suggested_room(df, theme):
-
-    force_recache = theme
+def plot_IMDb_duration_suggested_room(df):
 
     # Group by room and get average ratings
     grouped_data = [df[df['room'] == room]['runtimeMinutes'].dropna().values for room in sorted(df['room'].unique())]
@@ -1759,7 +1737,7 @@ def plot_IMDb_duration_suggested_room(df, theme):
     return fig, grouped_data
 
 # Call the function and cache the result
-fig_8, grouped_data = plot_IMDb_duration_suggested_room(archieve_df, theme)
+fig_8, grouped_data = plot_IMDb_duration_suggested_room(archieve_df)
 
 # Display the plot in Streamlit
 st.pyplot(fig_8)
@@ -1795,9 +1773,7 @@ st.write(f'''
          ''') 
 
 @st.cache_data
-def plot_n_genres(df, theme):
-
-    force_recache = theme
+def plot_n_genres(df):
 
     # Sum the votes per room
     n_genre = df['main_genre'].value_counts().sort_values(ascending=True)
@@ -1826,7 +1802,7 @@ def plot_n_genres(df, theme):
     return fig
 
 # Call the function and cache the result
-fig_7 = plot_n_genres(watched_df, theme)
+fig_7 = plot_n_genres(watched_df)
 
 # Display the plot in Streamlit
 st.pyplot(fig_7)
@@ -1915,12 +1891,19 @@ movie_night_info, info_subset = movie_night_info_sub(archieve_df)
 # region Unique formatted dates
 # ===============================
 
-@st.cache_data
-def get_unique_dates(movie_night_info):
-    unique_dates = movie_night_info['Date'].dt.strftime('%d %B %Y').unique()
-    return unique_dates
+# @st.cache_data
+# def get_unique_year(movie_night_info):
+#     unique_year = movie_night_info['Date'].dt.strftime('%Y').unique()
+#     return unique_year
 
-dates = get_unique_dates(movie_night_info)
+# years = get_unique_year(movie_night_info)
+
+# @st.cache_data
+# def get_unique_dates(movie_night_info):
+#     unique_dates = movie_night_info['Date'].dt.strftime('%d %B %Y').unique()
+#     return unique_dates
+
+# dates = get_unique_dates(movie_night_info)
 
 # endregion
 
@@ -2038,7 +2021,29 @@ if complete_archieve == 0:
 
     st.write('Choose a movie night date. The elected film is highlited in green.')
 
-    movie_night_date = st.selectbox('Movie night date:', dates)
+    # Get the current year
+    current_year = datetime.now().year
+
+    # Create a list of years from 2023 to the current year
+    years = list(range(2023, current_year+1))
+
+    movie_night_year = st.selectbox('Select year:', years)
+
+    # Function to get unique dates for the selected year
+    # @st.cache_data
+    def get_unique_dates(movie_night_info, movie_night_year):
+        # Filter the DataFrame for the specified year
+        filtered_info = movie_night_info[movie_night_info['Date'].dt.year == movie_night_year]
+        
+        # Get unique dates in the desired format
+        unique_dates = filtered_info['Date'].dt.strftime('%d %B %Y').unique()
+        return unique_dates
+
+    # Get unique dates for the selected year
+    dates = get_unique_dates(movie_night_info, movie_night_year)
+
+    movie_night_date = st.selectbox(f'Select movie night date ({movie_night_year}):', 
+                                    dates)
 
     @st.cache_data
     def movie_night_date_filter(movie_night_info, movie_night_date):
