@@ -921,6 +921,8 @@ st.write(f'''✨ **In Conclusion**:
 
 # endregion
 
+st.divider()
+
 # endregion
 
 # ===============================
