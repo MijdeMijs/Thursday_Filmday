@@ -1405,7 +1405,7 @@ st.write(f'''We have watched films from **{n_unique_genres} different main genre
          What do you think? Are we drama queens :crown: or anime nerds :nerd_face: ???''')
 
 @st.cache_data
-def plot_IMDb_rating_room(df, theme):
+def plot_IMDb_rating_suggested_room(df, theme):
 
     force_recache = theme
 
@@ -1452,7 +1452,7 @@ def plot_IMDb_rating_room(df, theme):
     return fig, grouped_data
 
 # Call the function and cache the result
-fig_5, grouped_data = plot_IMDb_rating_room(watched_df, theme)
+fig_5, grouped_data = plot_IMDb_rating_suggested_room(watched_df, theme)
 
 # Display the plot in Streamlit
 st.pyplot(fig_5)
@@ -1509,6 +1509,112 @@ fig_6, grouped_data = plot_IMDb_rating_room(archieve_df, theme)
 
 # Display the plot in Streamlit
 st.pyplot(fig_6)
+
+@st.cache_data
+def plot_IMDb_duration_room(df, theme):
+
+    force_recache = theme
+
+    # Group by room and get average ratings
+    grouped_data = [df[df['room'] == room]['runtimeMinutes'].dropna().values for room in sorted(df['room'].unique())]
+
+    # Plot a boxplot with the specified style
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
+    box = ax.boxplot(grouped_data, patch_artist=True)
+
+    # Set the box colors to rainbow with black borders
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(grouped_data)))
+    for patch, color in zip(box['boxes'], colors):
+        patch.set_facecolor(color)
+        patch.set_edgecolor('black')
+
+    # Set the whisker and cap colors to black
+    for whisker in box['whiskers']:
+        whisker.set_color('black')
+    for cap in box['caps']:
+        cap.set_color('black')
+
+    # Set the median line color to black
+    for median in box['medians']:
+        median.set_color('black')
+
+    # Add mean as a small x
+    means = [np.mean(group) for group in grouped_data]
+    ax.scatter(range(1, len(means) + 1), means, color='black', marker='x', s=100, zorder=3)
+
+    # Add sample size per group on y=182
+    sample_sizes = [len(group) for group in grouped_data]
+    for i, size in enumerate(sample_sizes):
+        ax.text(i + 1, 182, f'n={size}', ha='center', va='center', fontsize=12)
+
+    ax.set_ylabel('IMDb rating', fontsize=14)
+    ax.set_xticklabels(sorted(df['room'].unique()), rotation=0, fontsize=14)
+
+    ax.set_ylim((df['runtimeMinutes'].min()-10), (df['runtimeMinutes'].max()+10))
+
+    # Remove x-axis label
+    ax.set_xlabel('')
+
+    return fig, grouped_data
+
+# Call the function and cache the result
+fig_7, grouped_data = plot_IMDb_duration_room(watched_df, theme)
+
+# Display the plot in Streamlit
+st.pyplot(fig_7)
+
+@st.cache_data
+def plot_IMDb_duration_suggested_room(df, theme):
+
+    force_recache = theme
+
+    # Group by room and get average ratings
+    grouped_data = [df[df['room'] == room]['runtimeMinutes'].dropna().values for room in sorted(df['room'].unique())]
+
+    # Plot a boxplot with the specified style
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure background color to white
+    box = ax.boxplot(grouped_data, patch_artist=True)
+
+    # Set the box colors to rainbow with black borders
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(grouped_data)))
+    for patch, color in zip(box['boxes'], colors):
+        patch.set_facecolor(color)
+        patch.set_edgecolor('black')
+
+    # Set the whisker and cap colors to black
+    for whisker in box['whiskers']:
+        whisker.set_color('black')
+    for cap in box['caps']:
+        cap.set_color('black')
+
+    # Set the median line color to black
+    for median in box['medians']:
+        median.set_color('black')
+
+    # Add mean as a small x
+    means = [np.mean(group) for group in grouped_data]
+    ax.scatter(range(1, len(means) + 1), means, color='black', marker='x', s=100, zorder=3)
+
+    # Add sample size per group on y=9.75
+    sample_sizes = [len(group) for group in grouped_data]
+    for i, size in enumerate(sample_sizes):
+        ax.text(i + 1, 182, f'n={size}', ha='center', va='center', fontsize=12)
+
+    ax.set_ylabel('IMDb rating', fontsize=14)
+    ax.set_xticklabels(sorted(df['room'].unique()), rotation=0, fontsize=14)
+
+    ax.set_ylim((df['runtimeMinutes'].min()-10), (df['runtimeMinutes'].max()+10))
+
+    # Remove x-axis label
+    ax.set_xlabel('')
+
+    return fig, grouped_data
+
+# Call the function and cache the result
+fig_8, grouped_data = plot_IMDb_duration_suggested_room(archieve_df, theme)
+
+# Display the plot in Streamlit
+st.pyplot(fig_8)
 
 st.subheader('Genres', divider='violet')
 
