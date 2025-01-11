@@ -1861,6 +1861,7 @@ def movie_night_info_sub(archieve_df):
     info_subset = {'ID': archieve_df['tconst'],
                    'watched': archieve_df['watched'],
                    'canceled': archieve_df['canceled'],
+                   'duel': archieve_df['duel'],
                    'Date': archieve_df['date'],
                    'Room': archieve_df['room'],
                    'Film': archieve_df['primaryTitle'],
@@ -1884,26 +1885,6 @@ movie_night_info, info_subset = movie_night_info_sub(archieve_df)
 # !!! VERY WEIRD BUG HERE: If 'filtered_info' is not in return and
 # defined, the 'Votes' feature will get the 'Movie snack' string
 # but only if the data is '09 Martch 2023'... !!! 
-
-# endregion
-
-# ===============================
-# region Unique formatted dates
-# ===============================
-
-# @st.cache_data
-# def get_unique_year(movie_night_info):
-#     unique_year = movie_night_info['Date'].dt.strftime('%Y').unique()
-#     return unique_year
-
-# years = get_unique_year(movie_night_info)
-
-# @st.cache_data
-# def get_unique_dates(movie_night_info):
-#     unique_dates = movie_night_info['Date'].dt.strftime('%d %B %Y').unique()
-#     return unique_dates
-
-# dates = get_unique_dates(movie_night_info)
 
 # endregion
 
@@ -2019,7 +2000,13 @@ if complete_archieve == 0:
     # region Define & apply filters
     # ===============================
 
-    st.write('Choose a movie night date. The elected film is highlited in green.')
+    st.write(f'''
+             🎉 Ready for a cinematic adventure? First, pick a year to travel back 
+             in time! Then, choose your movie night date. The elected film, highlighted 
+             in green, awaits your discovery. 🌟🍿
+
+             Let the movie magic begin! 🎬✨
+             ''')
 
     # Get the current year
     current_year = datetime.now().year
@@ -2081,8 +2068,8 @@ if complete_archieve == 0:
         'Number of IMDb votes': '{:,.0f}'
     })
 
-    info_to_display = (list(single_movie_night_info.columns[4:7]) + 
-                       list(single_movie_night_info.columns[8:]))
+    info_to_display = (list(single_movie_night_info.columns[5:8]) + 
+                       list(single_movie_night_info.columns[9:]))
 
     # endregion
 
@@ -2121,7 +2108,21 @@ if complete_archieve == 0:
     
     # endregion
 
+    # ===============================
+    # region Duel
+    # ===============================
+
+    if single_movie_night_info['duel'].sum() == 1:
+        film_row = single_movie_night_info[single_movie_night_info['watched'] == 1]
+        roma_victor = str(film_row.iloc[0,5])
+        st.write(f''':crossed_swords: On this fateful day, a valiant duel unfolded! 
+                 A noble warrior fell, defending their honor and cherished movie. 
+                 **{roma_victor}** emerged triumphant! All hail the new champion!''')
+
     # endregion
+
+    # endregion
+
 else:
 
     # ===============================
@@ -2149,15 +2150,40 @@ else:
     # region Select display
     # ===============================
 
-    info_to_display = list(styled_df_complete.columns[3:])
+    info_to_display = list(styled_df_complete.columns[4:])
 
-    st.write(f'''This is the archieve complete film archieve! It includes a stunning
-             **{n_nights} movie nights**! Elected films are highlighted in green.''')
+    st.write(f"""
+             **Welcome to the ultimate film archive!** 🎬✨ 
+             
+             Dive into the treasure trove of **{n_nights} unforgettable movie nights**! 
+             The chosen films, highlighted in green, shine like stars in our cinematic 
+             galaxy. 🌟🍿
+             
+             Ready to explore the legends of movie nights past? 🎥📚
+             """)
 
     st.dataframe(styled_df_complete, 
                  column_order=info_to_display, 
                  hide_index=True)
 
+    # endregion
+
+    # ===============================
+    # region Duel list
+    # ===============================
+
+    # Filter rows where duel is 1
+    duel_df = movie_night_info[movie_night_info['duel'] == 1]
+
+    # Write the information using streamlit
+    for index, row in duel_df.iterrows():
+        # Convert date to desired format
+        date_obj = pd.to_datetime(row['Date'])
+        formatted_date = date_obj.strftime("%d %b %Y")
+        
+        st.write(f"""⚔️ On **{formatted_date}**, **{row['Room']}** successfully defended 
+                 the title **{row['Film']}**.""")
+    
     # endregion
 
     # endregion
