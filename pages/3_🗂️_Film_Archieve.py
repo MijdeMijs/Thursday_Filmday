@@ -112,7 +112,7 @@ if st.sidebar.button("Generate random film!"):
         # Centered warning text using Markdown and CSS
         st.sidebar.markdown(
             """
-            <div style="text-align: center; background-color: #ffddc1; padding: 10px; border: 1px solid #ffa500; border-radius: 5px;">
+            <div style="text-align: center; background-color: #FFA726; padding: 10px; border: 1px solid #ffa500; border-radius: 5px; color: black;">
                 <strong>⚠️ First select filters! ⚠️</strong>
             </div>
             """,

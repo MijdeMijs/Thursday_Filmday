@@ -109,7 +109,7 @@ if st.sidebar.button("Generate random film!"):
         # Centered warning text using Markdown and CSS
         st.sidebar.markdown(
             """
-            <div style="text-align: center; background-color: #ffddc1; padding: 10px; border: 1px solid #ffa500; border-radius: 5px;">
+            <div style="text-align: center; background-color: #FFA726; padding: 10px; border: 1px solid #ffa500; border-radius: 5px; color: black;">
                 <strong>⚠️ First select filters! ⚠️</strong>
             </div>
             """,
@@ -438,7 +438,7 @@ st.write("""
          you to the best options.
     """)
 
-st.page_link("pages/1_🎬_Film_Chooser.py", label="Film Chooser", icon="🎬")
+st.page_link("pages/1_🎬_Film_Chooser.py", label="Go to Film Chooser", icon="🎬")
 
 st.write("""
     2. **Movie Stats**: Dive into some fun statistics about all the movies 
@@ -447,7 +447,7 @@ st.write("""
          movie-watching habits!
     """)
 
-st.page_link("pages/2_📊_Movie_Stats.py", label="Movie Stats", icon="📊")
+st.page_link("pages/2_📊_Movie_Stats.py", label="Go to Movie Stats", icon="📊")
 
 st.write("""
     3. **Film Archive**: Here, you can browse through a comprehensive list 
@@ -455,7 +455,7 @@ st.write("""
          reference to revisit past favorites or find new recommendations.
     """)
 
-st.page_link("pages/3_🗂️_Film_Archieve.py", label="Film Archieve", icon="🗂️")
+st.page_link("pages/3_🗂️_Film_Archieve.py", label="Go to Film Archieve", icon="🗂️")
 
 st.write("""
     I've also hidden some fun easter eggs throughout the app for you to 

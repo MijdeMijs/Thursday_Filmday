@@ -112,7 +112,7 @@ if st.sidebar.button("Generate random film!"):
         # Centered warning text using Markdown and CSS
         st.sidebar.markdown(
             """
-            <div style="text-align: center; background-color: #ffddc1; padding: 10px; border: 1px solid #ffa500; border-radius: 5px;">
+            <div style="text-align: center; background-color: #FFA726; padding: 10px; border: 1px solid #ffa500; border-radius: 5px; color: black;">
                 <strong>⚠️ First select filters! ⚠️</strong>
             </div>
             """,
@@ -607,12 +607,31 @@ genres = genre_list()
 
 # endregion
 
+# Initialize session state
+if 'selected_main_genre' not in st.session_state:
+    st.session_state['selected_main_genre'] = genres[0]
+
+# Define a callback function to update session state
+def save_main_genre():
+    st.session_state['selected_main_genre'] = st.session_state['key_main_genre']
+
 # select main genre 
-main_genre = st.selectbox('Main genre:', genres)
+main_genre = st.selectbox('Main genre:', genres,
+                          key='key_main_genre',
+                          index=genres.index(st.session_state['selected_main_genre']),
+                          on_change=save_main_genre)
 
 # ===============================
 # region Genre if-statement
 # ===============================
+
+# Initialize session state
+if 'selected_other_genres' not in st.session_state:
+    st.session_state['selected_other_genres'] = []
+
+# Define a callback function to update session state
+def save_other_genres():
+    st.session_state['selected_other_genres'] = st.session_state['key_other_genres']
 
 def process_genre_selection(main_genre, genres):
     genre_options = []
@@ -638,8 +657,11 @@ def process_genre_selection(main_genre, genres):
 
         other_genres = st.multiselect(
             f"Select a maximum of **{max_genres}** genre(s):",
-            options=genre_options
-        )
+            options=genre_options,
+            default=st.session_state['selected_other_genres'],
+            key='key_other_genres',
+            on_change=save_other_genres
+            )
         genre_selection = other_genres.copy()
         operator = AND_OR()
 
