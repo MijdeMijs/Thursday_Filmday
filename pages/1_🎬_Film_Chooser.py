@@ -25,8 +25,6 @@ if st.sidebar.button("Generate random film!"):
         # Sample one row
         random_row = st.session_state["filtered_data"].sample(1)
 
-        st.write(random_row)
-
         # Extract the required data
         random_film = random_row["Film"].iloc[0]
         random_rating = random_row["IMDb Rating"].iloc[0]
@@ -188,7 +186,8 @@ if 'show_popup_Friends' not in st.session_state:
 # ===============================
 
 # Generate random positions within the specified range
-def Bug_random_positions(num_points=100):
+@st.cache_data
+def Bug_random_positions_2(num_points=100):
     positions = []
     for _ in range(num_points):
         top = random.randint(12, 95)  # Random top position (12% to 95%)
@@ -199,7 +198,7 @@ def Bug_random_positions(num_points=100):
     return positions
 
 # Generate random keyframe positions
-random_positions_Bug = Bug_random_positions()
+random_positions_Bug_2 = Bug_random_positions_2()
 
 # endregion
 
@@ -216,7 +215,7 @@ def keyframes_CSS_Bug(random_positions_Bug):
     keyframes += "}"
     return keyframes
 
-keyframes_Bug = keyframes_CSS_Bug(random_positions_Bug)
+keyframes_Bug = keyframes_CSS_Bug(random_positions_Bug_2)
 
 # endregion
 
@@ -307,7 +306,8 @@ if st.session_state.show_bug:
 # region Escargot random path
 # ===============================
 
-def Escargot_random_positions(num_points=100):
+@st.cache_data
+def Escargot_random_positions_2(num_points=100):
     positions = []
     for _ in range(num_points):
         top = random.randint(12, 95)  # Random top position (12% to 95%)
@@ -317,7 +317,7 @@ def Escargot_random_positions(num_points=100):
     positions.append(positions[0])
     return positions
 
-random_positions_Escargot = Escargot_random_positions()
+random_positions_Escargot_2 = Escargot_random_positions_2()
 
 # endregion
 
@@ -334,7 +334,7 @@ def keyframes_CSS_Escargot(random_positions_Escargot):
     keyframes += "}"
     return keyframes
 
-keyframes_Escargot = keyframes_CSS_Escargot(random_positions_Escargot)
+keyframes_Escargot = keyframes_CSS_Escargot(random_positions_Escargot_2)
 
 # endregion
 
@@ -711,40 +711,59 @@ def calculate_values(df):
 
 # ===============================
 # region Simple filters
-# ===============================    
+# ===============================
 
 # year slider
 st.write('**Year:**')
+if 'slider_year' not in st.session_state:
+    st.session_state.slider_year = (1990, datetime.now().year) 
 selected_years = st.slider("Range of years in which a film went into premiere:", 
                    min_year, max_year,
-                   (default_min_year, default_max_year),
+                   (st.session_state.slider_year[0], 
+                    st.session_state.slider_year[1]),
                    step=1)
+if selected_years is not None:
+    st.session_state.slider_year = selected_years
 st.divider()
 
 # time slider
 st.write('**Duration:**')
+if 'slider_duration' not in st.session_state:
+    st.session_state.slider_duration = (60, 120) 
 selected_time = st.slider("Range of film duration in minutes:", 
                    min_time, max_time,
-                   (default_min_time, default_max_time),
+                   (st.session_state.slider_duration[0], 
+                    st.session_state.slider_duration[1]),
                    step=5)
+if selected_time is not None:
+    st.session_state.slider_duration = selected_time
 st.divider()
 
 # ratings slider
 st.write('**Rating:**')
+if 'slider_rating' not in st.session_state:
+    st.session_state.slider_rating = (6.0, 10.0) 
 selected_rating = st.slider("Range of film IMDb ratings:", 
                min_value=min_rating,
                max_value=max_rating,
-               value=(default_min_rating, default_max_rating),
+               value=(st.session_state.slider_rating[0],
+                      st.session_state.slider_rating[1]),
                step=ratings_step_size,
                format="%.1f")
+if selected_rating is not None:
+    st.session_state.slider_rating = selected_rating
 st.divider()
 
 # votes slider
 st.write('**Votes:**')
+if 'slider_votes' not in st.session_state:
+    st.session_state.slider_votes = 100000
 selected_votes = st.slider("Minimum number of votes for the IMDb film rating:", 
                min_votes, max_votes, 
-               default_min_votes,
+               st.session_state.slider_votes,
                step=votes_step_size)
+if selected_votes is not None:
+    st.session_state.slider_votes = selected_votes
 
 # endregion
 

@@ -186,7 +186,8 @@ if 'show_popup_Friends' not in st.session_state:
 # ===============================
 
 # Generate random positions within the specified range
-def Bug_random_positions(num_points=100):
+@st.cache_data
+def Bug_random_positions_4(num_points=100):
     positions = []
     for _ in range(num_points):
         top = random.randint(12, 95)  # Random top position (12% to 95%)
@@ -197,7 +198,7 @@ def Bug_random_positions(num_points=100):
     return positions
 
 # Generate random keyframe positions
-random_positions_Bug = Bug_random_positions()
+random_positions_Bug_4 = Bug_random_positions_4()
 
 # endregion
 
@@ -214,7 +215,7 @@ def keyframes_CSS_Bug(random_positions_Bug):
     keyframes += "}"
     return keyframes
 
-keyframes_Bug = keyframes_CSS_Bug(random_positions_Bug)
+keyframes_Bug = keyframes_CSS_Bug(random_positions_Bug_4)
 
 # endregion
 
@@ -305,7 +306,8 @@ if st.session_state.show_bug:
 # region Escargot random path
 # ===============================
 
-def Escargot_random_positions(num_points=100):
+@st.cache_data
+def Escargot_random_positions_4(num_points=100):
     positions = []
     for _ in range(num_points):
         top = random.randint(12, 95)  # Random top position (12% to 95%)
@@ -315,7 +317,7 @@ def Escargot_random_positions(num_points=100):
     positions.append(positions[0])
     return positions
 
-random_positions_Escargot = Escargot_random_positions()
+random_positions_Escargot_4 = Escargot_random_positions_4()
 
 # endregion
 
@@ -332,7 +334,7 @@ def keyframes_CSS_Escargot(random_positions_Escargot):
     keyframes += "}"
     return keyframes
 
-keyframes_Escargot = keyframes_CSS_Escargot(random_positions_Escargot)
+keyframes_Escargot = keyframes_CSS_Escargot(random_positions_Escargot_4)
 
 # endregion
 
