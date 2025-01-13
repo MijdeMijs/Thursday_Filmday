@@ -566,6 +566,26 @@ else:
 
 st.subheader('Search Filters', divider='violet')
 
+st.write('''
+        Because some behavior of the Thursday Filmday app drives me up the wall,
+        I'll give you two whimsical options for your filters: **(1) forget** your filters
+        when you navigate between pages. This will make the filters behave like a well-trained puppy 🐶
+        **(2) save** your filters when you navigate between pages. The filters won't reset if you return to the Film Chooser,
+        but beware! The filters will act like a mischievous gremlin 😈
+	 ''')
+
+# Initialize session state if not already done
+if 'genre_save' not in st.session_state:
+    st.session_state.genre_save = 0
+
+# Toggle button with session state
+if st.toggle('Forget/Save', key='toggle', value=st.session_state.genre_save):
+    st.session_state.genre_save = 1
+else:
+    st.session_state.genre_save = 0
+
+save = st.session_state.genre_save
+
 # ===============================
 # region Genre selection
 # ===============================
@@ -607,19 +627,25 @@ genres = genre_list()
 
 # endregion
 
-# Initialize session state
-if 'selected_main_genre' not in st.session_state:
-    st.session_state['selected_main_genre'] = genres[0]
+# ===============================
+# region Main genre
+# ===============================
 
-# Define a callback function to update session state
-def save_main_genre():
-    st.session_state['selected_main_genre'] = st.session_state['key_main_genre']
+if save == 1:
+    if 'selected_main_genre' not in st.session_state:
+        st.session_state['selected_main_genre'] = genres[0]
 
-# select main genre 
-main_genre = st.selectbox('Main genre:', genres,
-                          key='key_main_genre',
-                          index=genres.index(st.session_state['selected_main_genre']),
-                          on_change=save_main_genre)
+    def save_main_genre():
+         st.session_state['selected_main_genre'] = st.session_state['key_main_genre']
+
+    main_genre = st.selectbox('Main genre:', genres,
+                              key='key_main_genre',
+                              index=genres.index(st.session_state['selected_main_genre']),
+                              on_change=save_main_genre)
+else:
+    main_genre = st.selectbox('Main genre:', genres)
+
+# endregion
 
 # ===============================
 # region Genre if-statement
@@ -633,7 +659,7 @@ if 'selected_other_genres' not in st.session_state:
 def save_other_genres():
     st.session_state['selected_other_genres'] = st.session_state['key_other_genres']
 
-def process_genre_selection(main_genre, genres):
+def process_genre_selection(main_genre, genres, save):
     genre_options = []
     other_genres = []
     genre_selection = []
@@ -655,19 +681,29 @@ def process_genre_selection(main_genre, genres):
             max_genres = 3
             genre_tag = 1
 
-        other_genres = st.multiselect(
+        if save == 1:
+            other_genres = st.multiselect(
             f"Select a maximum of **{max_genres}** genre(s):",
             options=genre_options,
             default=st.session_state['selected_other_genres'],
             key='key_other_genres',
-            on_change=save_other_genres
-            )
-        genre_selection = other_genres.copy()
-        operator = AND_OR()
+            on_change=save_other_genres)
+
+            genre_selection = other_genres.copy()
+            operator = AND_OR()
+        else:
+            other_genres = st.multiselect(
+            f"Select a maximum of **{max_genres}** genre(s):",
+            options=genre_options)
+
+            genre_selection = other_genres.copy()
+            operator = AND_OR()
 
     return genre_options, other_genres, genre_selection, operator, genre_tag
 
-genre_options, other_genres, genre_selection, operator, genre_tag = process_genre_selection(main_genre, genres)
+(genre_options, other_genres, 
+ genre_selection, operator, 
+ genre_tag) = process_genre_selection(main_genre, genres, save)
 
 # endregion
 
@@ -735,58 +771,90 @@ def calculate_values(df):
 # region Simple filters
 # ===============================
 
-# year slider
-st.write('**Year:**')
-if 'slider_year' not in st.session_state:
-    st.session_state.slider_year = (1990, datetime.now().year) 
-selected_years = st.slider("Range of years in which a film went into premiere:", 
-                   min_year, max_year,
-                   (st.session_state.slider_year[0], 
-                    st.session_state.slider_year[1]),
-                   step=1)
-if selected_years is not None:
-    st.session_state.slider_year = selected_years
-st.divider()
+if save == 1:
+    # year slider
 
-# time slider
-st.write('**Duration:**')
-if 'slider_duration' not in st.session_state:
-    st.session_state.slider_duration = (60, 120) 
-selected_time = st.slider("Range of film duration in minutes:", 
-                   min_time, max_time,
-                   (st.session_state.slider_duration[0], 
-                    st.session_state.slider_duration[1]),
-                   step=5)
-if selected_time is not None:
-    st.session_state.slider_duration = selected_time
-st.divider()
+    st.write('**Year:**')
+    if 'slider_year' not in st.session_state:
+        st.session_state.slider_year = (1990, datetime.now().year) 
+    selected_years = st.slider("Range of years in which a film went into premiere:", 
+                       min_year, max_year,
+                       (st.session_state.slider_year[0], 
+                        st.session_state.slider_year[1]),
+                       step=1)
+    if selected_years is not None:
+        st.session_state.slider_year = selected_years
+    st.divider()
 
-# ratings slider
-st.write('**Rating:**')
-if 'slider_rating' not in st.session_state:
-    st.session_state.slider_rating = (6.0, 10.0) 
-selected_rating = st.slider("Range of film IMDb ratings:", 
-               min_value=min_rating,
-               max_value=max_rating,
-               value=(st.session_state.slider_rating[0],
-                      st.session_state.slider_rating[1]),
-               step=ratings_step_size,
-               format="%.1f")
-if selected_rating is not None:
-    st.session_state.slider_rating = selected_rating
-st.divider()
+    # time slider
+    st.write('**Duration:**')
+    if 'slider_duration' not in st.session_state:
+        st.session_state.slider_duration = (60, 120) 
+    selected_time = st.slider("Range of film duration in minutes:", 
+                      min_time, max_time,
+                      (st.session_state.slider_duration[0], 
+                       st.session_state.slider_duration[1]),
+                      step=5)
+    if selected_time is not None:
+        st.session_state.slider_duration = selected_time
+    st.divider()
 
-# votes slider
-st.write('**Votes:**')
-if 'slider_votes' not in st.session_state:
-    st.session_state.slider_votes = 100000
-selected_votes = st.slider("Minimum number of votes for the IMDb film rating:", 
-               min_votes, max_votes, 
-               st.session_state.slider_votes,
-               step=votes_step_size)
-if selected_votes is not None:
-    st.session_state.slider_votes = selected_votes
+    # ratings slider
+    st.write('**Rating:**')
+    if 'slider_rating' not in st.session_state:
+        st.session_state.slider_rating = (6.0, 10.0) 
+    selected_rating = st.slider("Range of film IMDb ratings:", 
+                        min_value=min_rating,
+                        max_value=max_rating,
+                        value=(st.session_state.slider_rating[0],
+                               st.session_state.slider_rating[1]),
+                        step=ratings_step_size,
+                        format="%.1f")
+    if selected_rating is not None:
+        st.session_state.slider_rating = selected_rating
+    st.divider()
 
+    # votes slider
+    st.write('**Votes:**')
+    if 'slider_votes' not in st.session_state:
+        st.session_state.slider_votes = 100000
+    selected_votes = st.slider("Minimum number of votes for the IMDb film rating:", 
+                       min_votes, max_votes, 
+                       st.session_state.slider_votes,
+                       step=votes_step_size)
+    if selected_votes is not None:
+        st.session_state.slider_votes = selected_votes
+else:
+    # year slider
+    st.write('**Year:**')
+ 
+    selected_years = st.slider("Range of years in which a film went into premiere:", 
+                       min_year, max_year,
+                       (default_min_year, default_max_year),
+                       step=1)
+    st.divider()
+
+    # time slider 
+    selected_time = st.slider("Range of film duration in minutes:", 
+                      min_time, max_time,
+                      (default_min_time, default_max_time),
+                      step=5)
+    st.divider()
+
+    # ratings slider 
+    selected_rating = st.slider("Range of film IMDb ratings:", 
+                        min_value=min_rating,
+                        max_value=max_rating,
+                        value=(default_min_rating, default_max_rating),
+                        step=ratings_step_size,
+                        format="%.1f")
+    st.divider()
+
+    # votes slider
+    selected_votes = st.slider("Minimum number of votes for the IMDb film rating:", 
+                       min_votes, max_votes, 
+                       default_min_votes,
+                       step=votes_step_size)
 # endregion
 
 # endregion

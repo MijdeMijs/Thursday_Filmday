@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import random
 import time
+from datetime import datetime
+from datetime import timedelta
 
 # endregion
 
@@ -1296,13 +1298,69 @@ st.write(f'''Together, these visuals reveal a lot about each room’s cinematic 
 # ===============================
 
 # ===============================
-# region Text genres
+# region Text genres and age
 # ===============================
 
-st.subheader('Genres', divider='violet')
+st.subheader('Film Age & Genres', divider='violet')
 
 st.write(f'''
-         **Genres Galore** 🎥🎭
+        **Film Age! :older_woman: or :baby:???**
+
+        Ever wondered how mature your film taste really is? Well, get ready for a 
+        cinematic adventure! You're about to discover your current Film Age! It's 
+        like figuring out the age of a fine wine, but with more popcorn and fewer 
+        grapes! 🍿🍇
+
+        So, whether your movie preferences lean towards old classics or the latest 
+        hits, let's find out just how seasoned your film taste truly is. Ready to 
+        discover the age of your cinematic palate? Let's roll the reel! 🎞️
+        ''')
+
+# ===============================
+# region Film age
+# ===============================
+
+# Function to convert days to years, months, and days
+def days_to_ymd(days):
+    years = days // 365
+    days %= 365
+    months = days // 30
+    days = round(days % 30)
+    return years, months, days
+
+# Function to get the appropriate emoji based on age
+def get_emoji(film_years):
+    if film_years < 13:
+        return ":baby:"  # Baby emoji
+    elif 13 <= film_years <= 24:
+        return ":boy:"  # Teen/young adult emoji
+    elif 25 <= film_years <= 50:
+        return ":blond-haired-woman:"  # Adult emoji
+    else:
+        return ":older_woman:"  # Grandparent emoji
+
+# Calculate the current year
+current_year = datetime.now().year
+
+# Group by 'Room' and calculate the average release year for each person
+average_release_year = archieve_df.groupby('room')['startYear'].mean()
+average_release_year = average_release_year.iloc[1:]
+
+# Calculate the Film Age for each person in days
+film_age_days = (current_year - average_release_year) * 365
+
+# Convert Film Age from days to years, months, and days
+film_age_ymd = film_age_days.apply(days_to_ymd)
+
+# Print the results using st.write with appropriate emojis
+for person, age in film_age_ymd.items():
+    emoji = get_emoji(age[0])
+    st.write(f"**Film age {person}:** {int(age[0])} years, {int(age[1])} months, and {age[2]} days {emoji}")
+
+st.divider()
+
+st.write(f'''
+         🎥 **Genres Galore** 🎭
 
          Take a look at this colorful breakdown of the genres we’ve tackled on movie nights. 
          We’ve dipped our toes into all kinds of cinematic waters, from high-energy thrillers 
