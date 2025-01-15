@@ -10,7 +10,7 @@ import matplotlib.dates as mdates
 import random
 import time
 from datetime import datetime
-from datetime import timedelta
+import math
 
 # endregion
 
@@ -402,7 +402,7 @@ def show_popup_Escargot():
 
 # Function to randomly set show_popup to True
 def random_escargot():
-    if not st.session_state.show_escargot and random.random() < 0.025: # 2.5% chance to spawn Escargot the Snail
+    if not st.session_state.show_escargot and random.random() < 0.01: # 2.5% chance to spawn Escargot the Snail
         st.session_state.show_escargot = True
 
 # Call the function to potentially show the popup
@@ -654,7 +654,7 @@ st.write(f"""
          released 20 years ago.*
 
          - 💯 **{room_5}**, with just **{int(sorted_n_winner[4])} wins**. Ouch. Did your movie picks even make it 
-         out of the suggestion phase? Did you try recommending **:red["Spy"]** every week? Don’t worry—*underdogs make for the best comeback stories!*
+         out of the suggestion phase? Did you try recommending **['Spy']** every week? Don’t worry—*underdogs make for the best comeback stories!*
 
          - ❓ As for the mysterious **“Alternative”** category with its lonely 
          **{int(sorted_n_winner[5])} win**—it’s basically the referee stepping in with a “let’s just watch 
@@ -1012,11 +1012,11 @@ st.pyplot(fig_5)
 # endregion
 
 # ===============================
-# region Room quality
+# region Named arrays
 # ===============================
 
-# @st.cache_data
-def IMDb_rating_ratio(grouped_data_rating, watched_df):
+@st.cache_data
+def make_named_arrays(grouped_data_rating):
     
     grouped_data_rating = grouped_data_rating[1:6]
 
@@ -1026,47 +1026,252 @@ def IMDb_rating_ratio(grouped_data_rating, watched_df):
     # Create a dictionary with names as keys and arrays as values
     named_arrays = {name: arr for name, arr in zip(names, grouped_data_rating)}
 
-    # Your original ratios dictionary
-    ratios = {name: np.mean(arr) / watched_df['averageRating'].mean() for name, arr in named_arrays.items()}
+    return named_arrays
 
-    # Calculate min and max values
-    min_val = min(ratios.values())
-    max_val = max(ratios.values())
+named_arrays = make_named_arrays(grouped_data_rating)
 
-    # Apply min-max normalization
-    scaled_ratios = {name: (value - min_val) / (max_val - min_val) for name, value in ratios.items()}
+# endregion
 
-    return scaled_ratios
+# ===============================
+# region Normalized IMDb Rating Ratio
+# ===============================
 
-scaled_ratios = IMDb_rating_ratio(grouped_data_rating, watched_df)    
+def normalized_imdb_rating_ratio(watched_df):
+    
+    # Filter out rows where 'Room' is 'Alternative'
+    filtered_df = watched_df[watched_df['room'] != 'Alternative']   
+
+    # Calculate the overall average watched IMDb rating
+    overall_avg_rating = filtered_df['averageRating'].mean()
+
+    # Calculate Normalized IMDb Rating Ratio for each room
+    normalized_imdb_rating_ratio_results = {}
+    for room in filtered_df['room'].unique():
+        room_avg_rating = filtered_df[filtered_df['room'] == room]['averageRating'].mean()
+        normalized_imdb_rating_ratio = overall_avg_rating / room_avg_rating
+        normalized_imdb_rating_ratio_results[room] = normalized_imdb_rating_ratio
+
+    return normalized_imdb_rating_ratio_results
+
+nrr = normalized_imdb_rating_ratio(watched_df)
 
 # Assign the ratios to individual variables
-ratio_1 = scaled_ratios["Room 1"].round(3)
-ratio_2 = scaled_ratios["Room 2"].round(3)
-ratio_3 = scaled_ratios["Room 3"].round(3)
-ratio_4 = scaled_ratios["Room 4"].round(3)
-ratio_5 = scaled_ratios["Room 5"].round(3)
+nrr_1 = nrr["Room 1"].round(3)
+nrr_2 = nrr["Room 2"].round(3)
+nrr_3 = nrr["Room 3"].round(3)
+nrr_4 = nrr["Room 4"].round(3)
+nrr_5 = nrr["Room 5"].round(3)
+
+# endregion
+
+# ===============================
+# region Weighted Film Quality
+# ===============================
+
+# @st.cache_data
+def weighted_film_quality(named_arrays):
+    
+    # Calculate Weighted Film Quality (WFQ) for each room
+    wfq_results = {}
+    for room, ratings in named_arrays.items():
+        avg_rating = sum(ratings) / len(ratings)
+        num_films = len(ratings)
+        wfq = avg_rating * math.log(num_films + 1)
+        wfq_results[room] = wfq
+
+    return wfq_results
+
+wfq = weighted_film_quality(named_arrays)    
+
+# Assign the ratios to individual variables
+wfq_1 = wfq["Room 1"].round(3)
+wfq_2 = wfq["Room 2"].round(3)
+wfq_3 = wfq["Room 3"].round(3)
+wfq_4 = wfq["Room 4"].round(3)
+wfq_5 = wfq["Room 5"].round(3)
+
+# ===============================
+# region Quality-Quantity Ratio
+# ===============================
+
+def quality_quantity_ratio(named_arrays, watched_df):
+
+    # Calculate QQR for each room
+    qqr_results = {}
+    for room, ratings in named_arrays.items():
+        avg_rating = sum(ratings) / len(ratings)
+        max_films = watched_df[watched_df['room'] == room].shape[0]
+        num_films = len(ratings)
+        qqr = (avg_rating * max_films) / num_films
+        qqr_results[room] = qqr
+
+    return qqr_results
+
+qqr = quality_quantity_ratio(named_arrays, watched_df)
+
+# Assign the ratios to individual variables
+qqr_1 = qqr["Room 1"].round(3)
+qqr_2 = qqr["Room 2"].round(3)
+qqr_3 = qqr["Room 3"].round(3)
+qqr_4 = qqr["Room 4"].round(3)
+qqr_5 = qqr["Room 5"].round(3)
+
+# ===============================
+# region Normalized Balance Score
+# ===============================
+
+def normalized_balance_score(named_arrays, watched_df):
+
+    # Calculate Balance Score for each room
+    balance_score_results = {}
+    for room, ratings in named_arrays.items():
+        avg_rating = sum(ratings) / len(ratings)
+        max_films = watched_df[watched_df['room'] == room].shape[0]
+        num_films = len(ratings)
+        max_rating = max(ratings)
+        balance_score = (max_films * max_rating) / (avg_rating * num_films)
+        balance_score_results[room] = balance_score
+
+    return balance_score_results
+
+nbs = normalized_balance_score(named_arrays, watched_df)
+
+# Assign the ratios to individual variables
+nbs_1 = nbs["Room 1"].round(3)
+nbs_2 = nbs["Room 2"].round(3)
+nbs_3 = nbs["Room 3"].round(3)
+nbs_4 = nbs["Room 4"].round(3)
+nbs_5 = nbs["Room 5"].round(3)
+
+# endregion
+
+st.divider()
+
+# ===============================
+# region Scores explain
+# ===============================
+
+st.write(f"""
+**Let's Break It Down: Room Film Metrics** 🎬
+
+**1. Normalized IMDb Rating Ratio (NIRR)**
+
+The **Normalized IMDb Rating Ratio** is like your personal movie critic scale, ensuring 
+         each room's average rating is compared to the overall average. If your ratio is 
+         high, it means you generally contribute **high-quality films**. If your ratio 
+         is low, you might need to refine your taste! With a value of 1, you're **just 
+         average**—unworthy of special mentioning.
+
+- **High Ratio?** You’re contributing **above-average** films. Keep it up! 🎩
+- **Low Ratio?** Time to step up your movie game. Maybe vote on someone else next time? 👀
+
+**Formula:**  
+""")
+st.latex(r"""
+\text{Normalized IMDb Rating Ratio} = \frac{\text{Room's Avg IMDb Rating}}{\text{Overall Avg Watched IMDb Rating}}
+""")
+
+st.divider()
+
+st.write("""
+**2. Weighted Film Quality (WFQ)**
+
+**WFQ** rewards rooms that contribute great films in meaningful quantities—but logarithmic 
+         scaling ensures that sheer volume doesn’t overshadow quality. This metric 
+         combines the average rating of films with the logarithm of the number of films, 
+         ensuring that both quality and quantity are taken into account.
+
+- **High WFQ?** You’re balancing blockbusters and brilliance. 🎥
+- **Low WFQ?** Maybe too many films, or too much niche stuff that only you like. Either way, step up your game. 🙃
+
+**Formula:**  
+""")
+st.latex(r"""
+WFQ = \text{Room's Avg IMDb Rating} \times \log(\text{Number of Films in Room} + 1)
+""")
+
+st.divider()
+
+st.write("""
+**3. Quality-Quantity Ratio (QQR)**
+
+**QQR** is the ultimate metric for balancing **quality** and **quantity**. It asks: Are
+         your contributions great films in a reasonable volume? This metric ensures that 
+         the average rating multiplied by the maximum number of films is divided by the 
+         number of films, finding the perfect balance between quality and quantity.
+
+- **High QQR?** Your room nails that sweet spot between **pretentious** and **productive**. 🥂
+- **Low QQR?** Too many bad films or too few good ones—either way, fix it! 🚧
+
+**Formula:**  
+""")
+st.latex(r"""
+QQR = \frac{\text{Average Rating} \times \text{Max Films}}{\text{Number of Films}}
+""")
+
+st.write("""
+**4. Normalized Balance Score (NBS)**
+
+**NBS** is your cinematic compass, guiding you to the perfect balance by considering the 
+         highest rating. This metric ensures that the maximum number of films multiplied 
+         by the highest rating is divided by the average rating and the number of films, 
+         making sure no film is left behind in the shadows.
+
+- **High NBS?** You’ve achieved the ultimate balance in your film collection. 🏆
+- **Low NBS?** Some films might be overshadowing others. Time to balance the spotlight! 🎥
+
+**Formula:**  
+""")
+st.latex(r"""
+NBS = \frac{\text{Max Films} \times \text{Max Rating}}{\text{Average Rating} \times \text{Number of Films}}
+""")
+
+st.write(f"""*Compared to the Quality-Quantity Ratio, the Normalized Balance Score adds an 
+         extra layer of balance by considering the highest rating, making sure no film is 
+         left behind in the shadows!*""")
+
+st.divider()
+
+# ===============================
+# region Show scores table
+# ===============================
+
+# Create a dictionary with the data
+data = {
+    "Room Names": ["Room 1", "Room 2", "Room 3", "Room 4", "Room 5"],
+    "NIRR": [nrr_1, nrr_2, nrr_3, nrr_4, nrr_5],
+    "WFQ": [wfq_1, wfq_2, wfq_3, wfq_4, wfq_5],
+    "QQR": [qqr_1, qqr_2, qqr_3, qqr_4, qqr_5],
+    "NBS": [nbs_1, nbs_2, nbs_3, nbs_4, nbs_5]
+}
+
+# Convert the dictionary to a DataFrame
+df = pd.DataFrame(data)
+df = df.set_index("Room Names")
+
+# Round the values and format them as strings with three decimal places
+df = df.applymap(lambda x: f'{x:.3f}')
+
+# Function to highlight the maximum value in each column
+def highlight_max(s):
+    is_max = s == s.max()
+    return ['background-color: rgba(152, 251, 152, 0.3)' if v else '' for v in is_max]
+
+# Apply the function to the DataFrame
+styled_df = df.style.apply(highlight_max, axis=0)
+
+# Apply the function to the DataFrame
+# styled_df = df.style.applymap(color_high)
+
+# Display the DataFrame as a table with index set to False
+st.table(styled_df)
+
+st.divider()
+
+# endregion
 
 st.write(f'''
-         Let's check the **normalized average room IMDb rating/average watched film IMDb 
-         rating ratio**! If your ratio is high, it means you generally contribute 
-         high-quality films. If your ratio is low, you might need to refine your taste!
-         With a value of 0.5, you're just an average bloke. Unworthy of a special 
-         mentioning. Rooms with ratios below 0.5 contribute below-average quality films, 
-         while rooms with ratios above 0.5 contribute above-average quality films. Maybe 
-         consider voting on someone else next time?
-
-         - Room 1: **{ratio_1}**
-         - Room 2: **{ratio_2}**
-         - Room 3: **{ratio_3}**
-         - Room 4: **{ratio_4}**
-         - Room 5: **{ratio_5}**
-
-         <p><span style='font-size:13px;'>Notice! Beware of selection bias! Rooms with a 
-         low number of wins might have an unusually high or low ratio due to limited 
-         data.</span>
-         
-         The second plot shifts focus to the suggested films—many of which didn’t quite 
+The second plot shifts focus to the suggested films—many of which didn’t quite 
          make the cut. It’s a behind-the-scenes look at what each room brought to the 
          table. From here, we can see the range of ideas: some rooms stick to high-rated, 
          critically acclaimed movies, while others might be a bit more adventurous 

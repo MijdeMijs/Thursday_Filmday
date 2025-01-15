@@ -383,7 +383,7 @@ def show_popup_Escargot():
 
 # Function to randomly set show_popup to True
 def random_escargot():
-    if not st.session_state.show_escargot and random.random() < 0.025: # 2.5% chance to spawn Escargot the Snail
+    if not st.session_state.show_escargot and random.random() < 0.01: # 2.5% chance to spawn Escargot the Snail
         st.session_state.show_escargot = True
 
 # Call the function to potentially show the popup
@@ -432,9 +432,9 @@ st.write("""
     This app is designed to enhance your movie night experience with three 
          exciting sections:
 
-    1. **Movie Chooser**: This section helps you select the perfect film 
+    1. **Film Chooser**: This section helps you select the perfect film 
          for your movie night. Whether you're in the mood for a comedy, 
-         drama, or action-packed thriller, the Movie Chooser will guide 
+         drama, or action-packed thriller, the Film Chooser will guide 
          you to the best options.
     """)
 

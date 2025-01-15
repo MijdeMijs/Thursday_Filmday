@@ -398,7 +398,7 @@ def show_popup_Escargot():
 
 # Function to randomly set show_popup to True
 def random_escargot():
-    if not st.session_state.show_escargot and random.random() < 0.025: # 2.5% chance to spawn Escargot the Snail
+    if not st.session_state.show_escargot and random.random() < 0.01: # 2.5% chance to spawn Escargot the Snail
         st.session_state.show_escargot = True
 
 # Call the function to potentially show the popup

@@ -398,7 +398,7 @@ def show_popup_Escargot():
 
 # Function to randomly set show_popup to True
 def random_escargot():
-    if not st.session_state.show_escargot and random.random() < 0.025: # 2.5% chance to spawn Escargot the Snail
+    if not st.session_state.show_escargot and random.random() < 0.01: # 2.5% chance to spawn Escargot the Snail
         st.session_state.show_escargot = True
 
 # Call the function to potentially show the popup
@@ -732,7 +732,7 @@ def calculate_values(df):
     # year
     min_year = int(df['startYear'].min())
     max_year = datetime.now().year
-    default_min_year = 1970
+    default_min_year = 1985
     default_max_year = max_year
 
     # time 
@@ -744,7 +744,7 @@ def calculate_values(df):
     # ratings
     min_rating = float(1)
     max_rating = float(10)
-    default_min_rating = float(6)
+    default_min_rating = float(7)
     default_max_rating = max_rating
     ratings_step_size = 0.5
 
@@ -752,7 +752,7 @@ def calculate_values(df):
     min_votes = 0
     max_votes = 500000
     default_min_votes = 100000
-    votes_step_size = 1000
+    votes_step_size = 500
 
     return (min_year, max_year, default_min_year, default_max_year,
             min_time, max_time, default_min_time, default_max_time,
@@ -776,7 +776,7 @@ if save == 1:
 
     st.write('**Year:**')
     if 'slider_year' not in st.session_state:
-        st.session_state.slider_year = (1990, datetime.now().year) 
+        st.session_state.slider_year = (1985, datetime.now().year) 
     selected_years = st.slider("Range of years in which a film went into premiere:", 
                        min_year, max_year,
                        (st.session_state.slider_year[0], 
@@ -802,7 +802,7 @@ if save == 1:
     # ratings slider
     st.write('**Rating:**')
     if 'slider_rating' not in st.session_state:
-        st.session_state.slider_rating = (6.0, 10.0) 
+        st.session_state.slider_rating = (7.0, 10.0) 
     selected_rating = st.slider("Range of film IMDb ratings:", 
                         min_value=min_rating,
                         max_value=max_rating,
