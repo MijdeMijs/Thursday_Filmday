@@ -688,7 +688,6 @@ st.write(f"""
 # ===============================
 
 # Plot function
-@st.cache_data
 def plot_n_winner(n_winner):
 
     # Plot a bar
@@ -730,7 +729,6 @@ st.divider()
 # region Rooms times won trend
 # ===============================
 
-@st.cache_data
 def plot_winners_over_time(df):
 
     # Plot
@@ -831,7 +829,6 @@ st.write(f"""
 # ===============================
 
 # Plot function
-@st.cache_data
 def plot_votes_per_room(df):
 
     # Sum the votes per room
@@ -883,7 +880,6 @@ st.write(f'''The second figure takes us on a journey through time as the cumulat
 # ===============================
 
 # Plot function
-@st.cache_data
 def plot_votes_over_time(df):
 
     # Plotting
@@ -969,7 +965,6 @@ st.write(f'''
 # ===============================
 
 # Plot function
-@st.cache_data
 def plot_IMDb_rating_chosen_room(df):
 
     # Group by room and get average ratings
@@ -1306,7 +1301,6 @@ The second plot shifts focus to the suggested films—many of which didn’t qui
 # ===============================
 
 # Plot function
-@st.cache_data
 def plot_IMDb_rating_room(df):
 
     # Group by room and get average ratings
@@ -1395,7 +1389,6 @@ st.write(f'''
 # ===============================
 
 # Plot function
-@st.cache_data
 def plot_IMDb_duration_room(df):
 
     # Group by room and get average ratings
@@ -1459,7 +1452,6 @@ st.write(f'''The second plot digs into the runtimes of all the suggested films�
 # ===============================
 
 # Plot functions
-@st.cache_data
 def plot_IMDb_duration_suggested_room(df):
 
     # Group by room and get average ratings
@@ -1609,7 +1601,6 @@ st.write(f'''
 # ===============================
 
 # Plot function
-@st.cache_data
 def plot_n_genres(df):
 
     # Sum the votes per room
