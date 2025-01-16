@@ -1036,7 +1036,6 @@ if main_genre in ['No preference for any genre...',
 
 # Save the filtered data to session state
 st.session_state["filtered_data"] = display_df
-st.session_state["data_ready"] = True  # Mark the data as ready
 
 # endregion
 

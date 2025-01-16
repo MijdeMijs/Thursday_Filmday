@@ -567,7 +567,7 @@ n_canceled = int(archieve_df.groupby('date')['canceled'].max().sum())
 st.write(f"""
         🎥✨ **Welcome to the Ultimate Movie Night Recap!** ✨🎥  
 
-        Ladies and gentlemen, movie enthusiasts, and armchair critics, it’s time to dive into the drama, competition, and cinematic revelations of our movie night showdown. This page is your guide to everything that went down—from the nail-biting voting battles to the genre trends shaping our evenings. Let’s break it down:  
+        Ladies and gentlemen, movie enthusiasts, and armchair critics, it’s time to dive into the drama, competition, and cinematic revelations of our movie night showdown. This page is your guide to everything that went down—from the nail-biting voting battles to the genre trends shaping our evenings. Let’s break it down!  
 
         ---
 
@@ -592,6 +592,24 @@ st.write(f"""
         which **{n_suggest_unique} films** where unique suggestions. Unfortunately, we had to 
         cancel **{n_canceled} movie nights**...
         """)
+
+# endregion
+
+# ===============================
+# region Archive version control
+# ===============================
+
+if archieve_df_version.month == datetime.now().month:    
+    archieve_df_version = archieve_df_version.strftime('%B %d, %Y')
+    text = f'*IMDb data version: **{archieve_df_version}***'
+    st.markdown(f'''<span style="font-size: 13px;">*Archieve version: 
+                **{archieve_df_version}***</span>''', 
+                unsafe_allow_html=True)
+else:
+    archieve_df_version = archieve_df_version.strftime('%B %d, %Y')
+    st.markdown(f'''<span style="font-size: 13px;">:red[***Notice!** Still using archieve 
+                version **{archieve_df_version}**!*]</span>''', 
+                unsafe_allow_html=True)
 
 # endregion
 
