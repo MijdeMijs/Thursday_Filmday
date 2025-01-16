@@ -670,7 +670,7 @@ st.write(f"""
 # ===============================
 
 # Plot function
-# @st.cache_data
+@st.cache_data
 def plot_n_winner(n_winner):
 
     # Plot a bar
@@ -712,7 +712,7 @@ st.divider()
 # region Rooms times won trend
 # ===============================
 
-# @st.cache_data
+@st.cache_data
 def plot_winners_over_time(df):
 
     # Plot
@@ -813,7 +813,7 @@ st.write(f"""
 # ===============================
 
 # Plot function
-# @st.cache_data
+@st.cache_data
 def plot_votes_per_room(df):
 
     # Sum the votes per room
@@ -865,7 +865,7 @@ st.write(f'''The second figure takes us on a journey through time as the cumulat
 # ===============================
 
 # Plot function
-# @st.cache_data
+@st.cache_data
 def plot_votes_over_time(df):
 
     # Plotting
@@ -951,7 +951,7 @@ st.write(f'''
 # ===============================
 
 # Plot function
-# @st.cache_data
+@st.cache_data
 def plot_IMDb_rating_chosen_room(df):
 
     # Group by room and get average ratings
@@ -1036,6 +1036,7 @@ named_arrays = make_named_arrays(grouped_data_rating)
 # region Normalized IMDb Rating Ratio
 # ===============================
 
+@st.cache_data
 def normalized_imdb_rating_ratio(watched_df):
     
     # Filter out rows where 'Room' is 'Alternative'
@@ -1048,7 +1049,7 @@ def normalized_imdb_rating_ratio(watched_df):
     normalized_imdb_rating_ratio_results = {}
     for room in filtered_df['room'].unique():
         room_avg_rating = filtered_df[filtered_df['room'] == room]['averageRating'].mean()
-        normalized_imdb_rating_ratio = overall_avg_rating / room_avg_rating
+        normalized_imdb_rating_ratio = room_avg_rating / overall_avg_rating
         normalized_imdb_rating_ratio_results[room] = normalized_imdb_rating_ratio
 
     return normalized_imdb_rating_ratio_results
@@ -1068,7 +1069,7 @@ nrr_5 = nrr["Room 5"].round(3)
 # region Weighted Film Quality
 # ===============================
 
-# @st.cache_data
+@st.cache_data
 def weighted_film_quality(named_arrays):
     
     # Calculate Weighted Film Quality (WFQ) for each room
@@ -1094,20 +1095,21 @@ wfq_5 = wfq["Room 5"].round(3)
 # region Quality-Quantity Ratio
 # ===============================
 
-def quality_quantity_ratio(named_arrays, watched_df):
+@st.cache_data
+def quality_quantity_ratio(named_arrays, n_nights):
 
     # Calculate QQR for each room
     qqr_results = {}
     for room, ratings in named_arrays.items():
         avg_rating = sum(ratings) / len(ratings)
-        max_films = watched_df[watched_df['room'] == room].shape[0]
+        max_films = n_nights
         num_films = len(ratings)
         qqr = (avg_rating * max_films) / num_films
         qqr_results[room] = qqr
 
     return qqr_results
 
-qqr = quality_quantity_ratio(named_arrays, watched_df)
+qqr = quality_quantity_ratio(named_arrays, n_nights)
 
 # Assign the ratios to individual variables
 qqr_1 = qqr["Room 1"].round(3)
@@ -1120,13 +1122,14 @@ qqr_5 = qqr["Room 5"].round(3)
 # region Normalized Balance Score
 # ===============================
 
-def normalized_balance_score(named_arrays, watched_df):
+@st.cache_data
+def normalized_balance_score(named_arrays, n_nights):
 
     # Calculate Balance Score for each room
     balance_score_results = {}
     for room, ratings in named_arrays.items():
         avg_rating = sum(ratings) / len(ratings)
-        max_films = watched_df[watched_df['room'] == room].shape[0]
+        max_films = n_nights
         num_films = len(ratings)
         max_rating = max(ratings)
         balance_score = (max_films * max_rating) / (avg_rating * num_films)
@@ -1134,7 +1137,7 @@ def normalized_balance_score(named_arrays, watched_df):
 
     return balance_score_results
 
-nbs = normalized_balance_score(named_arrays, watched_df)
+nbs = normalized_balance_score(named_arrays, n_nights)
 
 # Assign the ratios to individual variables
 nbs_1 = nbs["Room 1"].round(3)
@@ -1285,7 +1288,7 @@ The second plot shifts focus to the suggested films—many of which didn’t qui
 # ===============================
 
 # Plot function
-# @st.cache_data
+@st.cache_data
 def plot_IMDb_rating_room(df):
 
     # Group by room and get average ratings
@@ -1374,7 +1377,7 @@ st.write(f'''
 # ===============================
 
 # Plot function
-# @st.cache_data
+@st.cache_data
 def plot_IMDb_duration_room(df):
 
     # Group by room and get average ratings
@@ -1438,7 +1441,7 @@ st.write(f'''The second plot digs into the runtimes of all the suggested films�
 # ===============================
 
 # Plot functions
-# @st.cache_data
+@st.cache_data
 def plot_IMDb_duration_suggested_room(df):
 
     # Group by room and get average ratings
@@ -1588,7 +1591,7 @@ st.write(f'''
 # ===============================
 
 # Plot function
-# @st.cache_data
+@st.cache_data
 def plot_n_genres(df):
 
     # Sum the votes per room
